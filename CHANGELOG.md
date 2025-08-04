@@ -1,3 +1,12 @@
+## 1.0.1
+
+- **BUGFIX**: Fixed coordinate order issue in EPSG:3857 to EPSG:4326 conversions
+  - Improved coordinate input format handling for Web Mercator (EPSG:3857)
+  - Added comprehensive documentation for coordinate order expectations
+  - Enhanced `_createSourcePoint` method to handle projected coordinate systems correctly
+  - Fixed polygon coordinate misalignment that caused Turkey boundaries to appear in wrong locations
+  - Added detailed coordinate order validation for EPSG:3857 inputs
+
 ## 1.0.0
 
 - **Initial Release** - Complete coordinate projection and spatial analysis package for Dart/Flutter

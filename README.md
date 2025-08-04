@@ -5,6 +5,20 @@
 
 A comprehensive Dart package for coordinate system transformations and advanced spatial analysis operations. Built with dart_jts integration for robust geometric computations and Well-Known Text (WKT) generation.
 
+## ⚠️ Important: EPSG:3857 Coordinate Input Format
+
+When working with **EPSG:3857 (Web Mercator)** coordinates, ensure proper coordinate order:
+
+```dart
+// ✅ CORRECT: For Web Mercator inputs, use LatLng(Y_northing, X_easting)
+final webMercatorPoint = LatLng(5013551.0, 3225860.0); // LatLng(Y, X)
+
+// ❌ WRONG: This will cause coordinate misalignment
+final wrongPoint = LatLng(3225860.0, 5013551.0); // LatLng(X, Y) - AVOID!
+```
+
+**See [EPSG3857_COORDINATE_FORMAT.md](EPSG3857_COORDINATE_FORMAT.md) for detailed explanation.**
+
 ## Features
 
 - **🌍 Coordinate Transformations**: Convert between different coordinate systems and projections

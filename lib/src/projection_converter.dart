@@ -65,8 +65,8 @@ class ProjectionConverter {
       // Create projection transformation tuple
       final transformationTuple = proj4.ProjectionTuple(fromProj: sourceProj, toProj: targetProj);
 
-      // Create source point with longitude as x and latitude as y
-      final sourceCoordinate = proj4.Point(x: sourcePoint.longitude, y: sourcePoint.latitude);
+      // Create source point - need to handle coordinate order for source projection too
+      final sourceCoordinate = _createSourcePoint(sourceProjectionKey, sourcePoint);
 
       // Apply forward transformation
       final transformedCoordinate = transformationTuple.forward(sourceCoordinate);
@@ -79,6 +79,87 @@ class ProjectionConverter {
     }
   }
 
+  // MARK: - Source Point Creation
+
+  /// Creates a proj4.Point from a LatLng based on the source projection type.
+  ///
+  /// For geographic coordinate systems (like EPSG:4326):
+  /// - sourcePoint.longitude -> x (easting)
+  /// - sourcePoint.latitude -> y (northing)
+  ///
+  /// For projected coordinate systems (like EPSG:3857):
+  /// - WARNING: LatLng constructor expects LatLng(latitude, longitude)
+  /// - But for Web Mercator, we store projected coordinates where:
+  ///   * sourcePoint.latitude should contain the Y value (northing)
+  ///   * sourcePoint.longitude should contain the X value (easting)
+  /// - This creates potential confusion in coordinate input format
+  ///
+  /// IMPORTANT: For EPSG:3857 inputs, users should create LatLng as:
+  /// LatLng(projected_y_northing, projected_x_easting)
+  /// NOT LatLng(projected_x_easting, projected_y_northing)
+  static proj4.Point _createSourcePoint(String sourceProjectionKey, LatLng sourcePoint) {
+    switch (sourceProjectionKey) {
+      // Geographic coordinate systems - standard lat/lng interpretation
+      case 'EPSG:4326':
+      case 'EPSG4326':
+        return proj4.Point(x: sourcePoint.longitude, y: sourcePoint.latitude);
+
+      // Web Mercator and other projected systems
+      case 'EPSG:3857':
+      case 'EPSG3857':
+      case 'WEB_MERCATOR':
+        // For Web Mercator projected coordinates:
+        // User input LatLng(northing_y, easting_x) -> proj4.Point(x=easting, y=northing)
+        return proj4.Point(x: sourcePoint.longitude, y: sourcePoint.latitude);
+
+      // Turkish National Coordinate Systems (ITRF96) - Projected systems
+      case 'ITRF96_3DEG_TM27':
+      case 'ITRF96_3DEG_TM30':
+      case 'ITRF96_3DEG_TM33':
+      case 'ITRF96_3DEG_TM36':
+      case 'ITRF96_3DEG_TM39':
+      case 'ITRF96_3DEG_TM42':
+      case 'ITRF96_3DEG_TM45':
+        return proj4.Point(x: sourcePoint.longitude, y: sourcePoint.latitude);
+
+      // European Datum 1950 systems - Projected systems
+      case 'ED50_3DEG_TM27':
+      case 'ED50_3DEG_TM30':
+      case 'ED50_3DEG_TM33':
+      case 'ED50_3DEG_TM36':
+      case 'ED50_3DEG_TM39':
+      case 'ED50_3DEG_TM42':
+      case 'ED50_3DEG_TM45':
+        return proj4.Point(x: sourcePoint.longitude, y: sourcePoint.latitude);
+
+      // UTM 6-degree zone systems - Projected systems
+      case 'ED50_6DEG_ZONE35':
+      case 'ED50_6DEG_ZONE36':
+      case 'ED50_6DEG_ZONE37':
+      case 'ED50_6DEG_ZONE38':
+      case 'ITRF96_6DEG_ZONE35':
+      case 'ITRF96_6DEG_ZONE36':
+      case 'ITRF96_6DEG_ZONE37':
+      case 'ITRF96_6DEG_ZONE38':
+        return proj4.Point(x: sourcePoint.longitude, y: sourcePoint.latitude);
+
+      // Spatial Reference Organization definitions - Projected systems
+      case 'SR-ORG:7931':
+      case 'SR-ORG:7932':
+      case 'SR-ORG:7933':
+      case 'SR-ORG:7934':
+      case 'SR-ORG:7935':
+      case 'SR-ORG:7936':
+      case 'SR-ORG:7937':
+        return proj4.Point(x: sourcePoint.longitude, y: sourcePoint.latitude);
+
+      // Default case for unknown projections
+      default:
+        log('Unknown source projection: $sourceProjectionKey, using default longitude/latitude (x/y) coordinate order');
+        return proj4.Point(x: sourcePoint.longitude, y: sourcePoint.latitude);
+    }
+  }
+
   // MARK: - Coordinate Order Handling
 
   /// Handles coordinate order based on the target projection type.
@@ -86,20 +167,28 @@ class ProjectionConverter {
   /// Different coordinate systems expect different coordinate orders:
   /// - Geographic systems (WGS84, etc.) expect latitude/longitude order
   /// - Projected systems (UTM, TM, etc.) expect x/y order
+  ///
+  /// IMPORTANT: LatLng constructor expects LatLng(latitude, longitude)
+  /// For projected systems:
+  /// - x = easting (east-west, longitude-like)
+  /// - y = northing (north-south, latitude-like)
+  /// So we need: LatLng(y, x) for projected systems
   static LatLng _handleCoordinateOrder(String targetProjectionKey, proj4.Point transformedCoordinate) {
     switch (targetProjectionKey) {
-      // Geographic coordinate systems - latitude/longitude order (y,x)
+      // Geographic coordinate systems - already in lat/lng order
       case 'EPSG:4326':
       case 'EPSG4326':
+        // For geographic systems, proj4 returns: x=longitude, y=latitude
+        // LatLng constructor expects: LatLng(latitude, longitude)
         return LatLng(transformedCoordinate.y, transformedCoordinate.x);
 
-      // Projected coordinate systems - x/y order but LatLng constructor expects (lat, lng)
-      // So for projected systems, we need to be careful about the mapping
+      // Web Mercator (EPSG:3857) - projected coordinate system
       case 'EPSG:3857':
       case 'EPSG3857':
       case 'WEB_MERCATOR':
         // Web Mercator: x = easting (longitude direction), y = northing (latitude direction)
         // LatLng constructor: LatLng(latitude, longitude)
+        // Therefore: LatLng(y=northing, x=easting)
         return LatLng(transformedCoordinate.y, transformedCoordinate.x);
 
       // Turkish National Coordinate Systems (ITRF96) - Projected systems
