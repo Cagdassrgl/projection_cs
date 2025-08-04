@@ -35,7 +35,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  projection_cs: ^0.0.1
+  projection_cs: ^1.0.1
 ```
 
 Then run:
