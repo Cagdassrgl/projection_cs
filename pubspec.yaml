@@ -1,10 +1,11 @@
 name: projection_cs
-description: "A new Flutter package project."
-version: 0.0.1
-homepage:
+description: A Dart package for coordinate system transformations using the Proj4 library.
+version: 1.0.0
+homepage: https://github.com/Cagdassrgl/projection_cs
+repository: https://github.com/Cagdassrgl/projection_cs
 
 environment:
-  sdk: ^3.0.0
+  sdk: ">=3.0.0 <4.0.0"
   flutter: ">=1.17.0"
 
 dependencies:

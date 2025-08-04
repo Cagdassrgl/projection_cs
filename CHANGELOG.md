@@ -1,4 +1,4 @@
-## 0.0.1
+## 1.0.0
 
 - **Initial Release** - Complete coordinate projection and spatial analysis package for Dart/Flutter
 - **ProjectionConverter**: PROJ4-based coordinate system transformations
