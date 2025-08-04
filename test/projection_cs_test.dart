@@ -1,0 +1,313 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:projection_cs/projection_cs.dart';
+
+void main() {
+  group('ProjectionConverter Tests', () {
+    test('should convert WGS84 to Web Mercator correctly', () {
+      const wgs84Point = LatLng(41.0082, 28.9784); // Istanbul coordinates
+
+      final webMercatorPoint = ProjectionConverter.convert(
+        sourcePoint: wgs84Point,
+        sourceProjectionKey: 'EPSG:4326',
+        targetProjectionKey: 'EPSG:3857',
+      );
+
+      // Web Mercator coordinates should be significantly larger numbers
+      expect(webMercatorPoint.latitude.abs(), greaterThan(1000000));
+      expect(webMercatorPoint.longitude.abs(), greaterThan(1000000));
+    });
+
+    test('should convert batch of coordinates correctly', () {
+      const wgs84Points = [
+        LatLng(41.0082, 28.9784), // Istanbul
+        LatLng(39.9334, 32.8597), // Ankara
+      ];
+
+      final webMercatorPoints = ProjectionConverter.convertBatch(
+        sourcePoints: wgs84Points,
+        sourceProjectionKey: 'EPSG:4326',
+        targetProjectionKey: 'EPSG:3857',
+      );
+
+      expect(webMercatorPoints.length, equals(2));
+      expect(webMercatorPoints[0].latitude.abs(), greaterThan(1000000));
+      expect(webMercatorPoints[1].latitude.abs(), greaterThan(1000000));
+    });
+
+    test('should throw ProjectionException for invalid projection key', () {
+      const point = LatLng(41.0082, 28.9784);
+
+      expect(
+        () => ProjectionConverter.convert(
+          sourcePoint: point,
+          sourceProjectionKey: 'INVALID:PROJECTION',
+          targetProjectionKey: 'EPSG:4326',
+        ),
+        throwsA(isA<ProjectionException>()),
+      );
+    });
+
+    test('should throw ProjectionException for unsupported source projection', () {
+      const point = LatLng(41.0082, 28.9784);
+
+      expect(
+        () => ProjectionConverter.convert(
+          sourcePoint: point,
+          sourceProjectionKey: 'UNSUPPORTED:SOURCE',
+          targetProjectionKey: 'EPSG:4326',
+        ),
+        throwsA(isA<ProjectionException>()),
+      );
+    });
+
+    test('should throw ProjectionException for unsupported target projection', () {
+      const point = LatLng(41.0082, 28.9784);
+
+      expect(
+        () => ProjectionConverter.convert(
+          sourcePoint: point,
+          sourceProjectionKey: 'EPSG:4326',
+          targetProjectionKey: 'UNSUPPORTED:TARGET',
+        ),
+        throwsA(isA<ProjectionException>()),
+      );
+    });
+
+    test('should handle different coordinate order for EPSG:4326', () {
+      const wgs84Point = LatLng(41.0082, 28.9784); // Istanbul in WGS84
+
+      // Convert to Web Mercator and back to test coordinate order handling
+      final webMercatorPoint = ProjectionConverter.convert(
+        sourcePoint: wgs84Point,
+        sourceProjectionKey: 'EPSG:4326',
+        targetProjectionKey: 'EPSG:3857',
+      );
+
+      final backToWgs84Point = ProjectionConverter.convert(
+        sourcePoint: webMercatorPoint,
+        sourceProjectionKey: 'EPSG:3857',
+        targetProjectionKey: 'EPSG:4326',
+      );
+
+      // Should return original coordinates within reasonable precision
+      expect(backToWgs84Point.latitude, closeTo(41.0082, 0.01));
+      expect(backToWgs84Point.longitude, closeTo(28.9784, 0.01));
+    });
+
+    test('should handle Turkish national coordinate systems', () {
+      const wgs84Point = LatLng(41.0082, 28.9784); // Istanbul
+
+      final itrf96Point = ProjectionConverter.convert(
+        sourcePoint: wgs84Point,
+        sourceProjectionKey: 'EPSG:4326',
+        targetProjectionKey: 'ITRF96_3DEG_TM30',
+      );
+
+      // Should return x/y order for projected systems
+      expect(itrf96Point.latitude.abs(), greaterThan(1000));
+      expect(itrf96Point.longitude.abs(), greaterThan(1000));
+    });
+  });
+
+  group('WktGenerator Tests', () {
+    test('should create point geometry WKT', () {
+      final pointWkt = WktGenerator.createPoint(
+        coordinates: [const LatLng(41.0082, 28.9784)],
+        sourceProjectionKey: 'EPSG:4326',
+        targetProjectionKey: 'EPSG:3857',
+      );
+
+      expect(pointWkt, contains('POINT'));
+      expect(pointWkt, isNotEmpty);
+    });
+
+    test('should create linestring geometry WKT', () {
+      final lineWkt = WktGenerator.createLineString(
+        coordinates: [
+          const LatLng(41.0082, 28.9784),
+          const LatLng(41.0090, 28.9790),
+        ],
+        sourceProjectionKey: 'EPSG:4326',
+        targetProjectionKey: 'EPSG:3857',
+      );
+
+      expect(lineWkt, contains('LINESTRING'));
+      expect(lineWkt, isNotEmpty);
+    });
+
+    test('should create polygon geometry WKT', () {
+      final polygonWkt = WktGenerator.createPolygon(
+        coordinates: [
+          const LatLng(41.0082, 28.9784),
+          const LatLng(41.0090, 28.9790),
+          const LatLng(41.0080, 28.9800),
+          const LatLng(41.0082, 28.9784),
+        ],
+        sourceProjectionKey: 'EPSG:4326',
+        targetProjectionKey: 'EPSG:3857',
+      );
+
+      expect(polygonWkt, contains('POLYGON'));
+      expect(polygonWkt, isNotEmpty);
+    });
+
+    test('should create multipoint geometry WKT', () {
+      final multiPointWkt = WktGenerator.createMultiPoint(
+        coordinates: [
+          const LatLng(41.0082, 28.9784),
+          const LatLng(41.0090, 28.9790),
+        ],
+        sourceProjectionKey: 'EPSG:4326',
+        targetProjectionKey: 'EPSG:3857',
+      );
+
+      expect(multiPointWkt, contains('MULTIPOINT'));
+      expect(multiPointWkt, isNotEmpty);
+    });
+
+    test('should perform buffer operation', () {
+      const pointWkt = 'POINT(100 200)';
+      final bufferedWkt = WktGenerator.buffer(
+        wktGeometry: pointWkt,
+        distance: 50,
+      );
+
+      expect(bufferedWkt, isNotEmpty);
+    });
+
+    test('should calculate convex hull', () {
+      const multiPointWkt = 'MULTIPOINT(0 0, 1 1, 2 0, 1 2)';
+      final convexHullWkt = WktGenerator.convexHull(
+        wktGeometry: multiPointWkt,
+      );
+
+      expect(convexHullWkt, isNotEmpty);
+    });
+
+    test('should calculate centroid', () {
+      const polygonWkt = 'POLYGON((0 0, 4 0, 4 4, 0 4, 0 0))';
+      final centroidWkt = WktGenerator.centroid(
+        wktGeometry: polygonWkt,
+      );
+
+      expect(centroidWkt, contains('POINT'));
+    });
+
+    test('should test spatial predicates', () {
+      const polygon1 = 'POLYGON((0 0, 2 0, 2 2, 0 2, 0 0))';
+      const polygon2 = 'POLYGON((1 1, 3 1, 3 3, 1 3, 1 1))';
+      const point = 'POINT(1 1)';
+
+      expect(
+          WktGenerator.intersects(
+            wktGeometry1: polygon1,
+            wktGeometry2: polygon2,
+          ),
+          isTrue);
+
+      expect(
+          WktGenerator.contains(
+            wktGeometry1: polygon1,
+            wktGeometry2: point,
+          ),
+          isTrue);
+
+      expect(
+          WktGenerator.disjoint(
+            wktGeometry1: 'POINT(0 0)',
+            wktGeometry2: 'POINT(10 10)',
+          ),
+          isTrue);
+    });
+
+    test('should calculate measurements', () {
+      const polygon = 'POLYGON((0 0, 4 0, 4 3, 0 3, 0 0))';
+      const linestring = 'LINESTRING(0 0, 3 4)';
+
+      final area = WktGenerator.getArea(wktGeometry: polygon);
+      expect(area, greaterThan(0));
+
+      final length = WktGenerator.getLength(wktGeometry: linestring);
+      expect(length, greaterThan(0));
+
+      final distance = WktGenerator.distance(
+        wktGeometry1: 'POINT(0 0)',
+        wktGeometry2: 'POINT(3 4)',
+      );
+      expect(distance, greaterThan(0));
+    });
+
+    test('should validate WKT strings', () {
+      expect(WktGenerator.isValidWkt(wktGeometry: 'POINT(10 20)'), isTrue);
+      expect(WktGenerator.isValidWkt(wktGeometry: 'INVALID WKT'), isFalse);
+    });
+
+    test('should get geometry type', () {
+      final geometryType = WktGenerator.getGeometryType(
+        wktGeometry: 'POLYGON((0 0, 1 0, 1 1, 0 1, 0 0))',
+      );
+      expect(geometryType, equals('Polygon'));
+    });
+
+    test('should get number of points', () {
+      final numPoints = WktGenerator.getNumPoints(
+        wktGeometry: 'LINESTRING(0 0, 1 1, 2 2)',
+      );
+      expect(numPoints, equals(3));
+    });
+
+    test('should simplify geometry', () {
+      const linestring = 'LINESTRING(0 0, 1 0.1, 2 0, 3 0.1, 4 0)';
+      final simplified = WktGenerator.simplify(
+        wktGeometry: linestring,
+        tolerance: 0.2,
+      );
+      expect(simplified, isNotEmpty);
+      expect(simplified, contains('LINESTRING'));
+    });
+
+    test('should create geometry collection', () {
+      final collection = WktGenerator.createGeometryCollection(
+        wktGeometries: [
+          'POINT(10 20)',
+          'LINESTRING(0 0, 10 10)',
+          'POLYGON((0 0, 5 0, 5 5, 0 5, 0 0))',
+        ],
+      );
+      expect(collection, contains('GEOMETRYCOLLECTION'));
+    });
+
+    test('should throw ProjectionException for invalid coordinates', () {
+      expect(
+        () => WktGenerator.createPoint(
+          coordinates: [],
+          sourceProjectionKey: 'EPSG:4326',
+          targetProjectionKey: 'EPSG:3857',
+        ),
+        throwsA(isA<ProjectionException>()),
+      );
+    });
+  });
+  group('ProjectionDefinitions Tests', () {
+    test('should return available projections list', () {
+      final projections = ProjectionDefinitions.availableProjections;
+
+      expect(projections, isNotEmpty);
+      expect(projections, contains('EPSG:4326'));
+      expect(projections, contains('EPSG:3857'));
+    });
+
+    test('should check if projection is supported', () {
+      expect(ProjectionDefinitions.isSupported('EPSG:4326'), isTrue);
+      expect(ProjectionDefinitions.isSupported('INVALID:PROJECTION'), isFalse);
+    });
+
+    test('should throw exception for unsupported projection', () {
+      expect(
+        () => ProjectionDefinitions.get('INVALID:PROJECTION'),
+        throwsA(isA<ProjectionException>()),
+      );
+    });
+  });
+}
