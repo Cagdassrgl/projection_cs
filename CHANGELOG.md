@@ -1,3 +1,7 @@
+## 1.1.0
+
+- Added WKTParser
+
 ## 1.0.5
 
 - **OPTIMIZATION**: Improved performance for same-projection transformations
