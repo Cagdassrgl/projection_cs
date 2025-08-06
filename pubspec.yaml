@@ -1,6 +1,6 @@
 name: projection_cs
 description: A Dart package for coordinate system transformations using the Proj4 library.
-version: 1.0.3
+version: 1.0.4
 homepage: https://github.com/Cagdassrgl/projection_cs
 repository: https://github.com/Cagdassrgl/projection_cs
 
@@ -9,10 +9,12 @@ environment:
   flutter: ">=1.17.0"
 
 dependencies:
+  cupertino_icons: ^1.0.8
   dart_jts: ^0.3.0+1
 
   flutter:
     sdk: flutter
+  flutter_map: ^6.1.0
 
   latlong2: ^0.9.1
   proj4dart: ^2.1.0
