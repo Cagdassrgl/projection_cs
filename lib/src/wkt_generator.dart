@@ -718,7 +718,7 @@ class WktGenerator {
   /// ```dart
   /// // Without projection conversion
   /// final geometry = WktGenerator.wktToGeometry(wktGeometry: 'POINT (10.0 20.0)');
-  /// 
+  ///
   /// // With projection conversion from Web Mercator to WGS84
   /// final geometry = WktGenerator.wktToGeometry(
   ///   wktGeometry: 'POINT (3226883.8 5069429.0)',
@@ -772,9 +772,7 @@ class WktGenerator {
         sourceProjectionKey: sourceProjectionKey,
         targetProjectionKey: targetProjectionKey,
       );
-      final convertedCoords = convertedLatLngs
-          .map((latLng) => Coordinate(latLng.longitude, latLng.latitude))
-          .toList();
+      final convertedCoords = convertedLatLngs.map((latLng) => Coordinate(latLng.longitude, latLng.latitude)).toList();
       return _geometryFactory.createLineString(convertedCoords);
     } else if (geometry is Polygon) {
       final polygon = geometry;
@@ -786,15 +784,13 @@ class WktGenerator {
         sourceProjectionKey: sourceProjectionKey,
         targetProjectionKey: targetProjectionKey,
       );
-      final convertedShellCoords = convertedShellLatLngs
-          .map((latLng) => Coordinate(latLng.longitude, latLng.latitude))
-          .toList();
-      
+      final convertedShellCoords = convertedShellLatLngs.map((latLng) => Coordinate(latLng.longitude, latLng.latitude)).toList();
+
       final convertedShell = _geometryFactory.createLinearRing(convertedShellCoords);
-      
+
       // Handle holes if present
       final holes = <LinearRing>[];
-      for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
+      for (var i = 0; i < polygon.getNumInteriorRing(); i++) {
         final hole = polygon.getInteriorRingN(i);
         final holeCoords = hole.getCoordinates();
         final holeLatLngs = holeCoords.map((coord) => LatLng(coord.y, coord.x)).toList();
@@ -803,16 +799,14 @@ class WktGenerator {
           sourceProjectionKey: sourceProjectionKey,
           targetProjectionKey: targetProjectionKey,
         );
-        final convertedHoleCoords = convertedHoleLatLngs
-            .map((latLng) => Coordinate(latLng.longitude, latLng.latitude))
-            .toList();
+        final convertedHoleCoords = convertedHoleLatLngs.map((latLng) => Coordinate(latLng.longitude, latLng.latitude)).toList();
         holes.add(_geometryFactory.createLinearRing(convertedHoleCoords));
       }
-      
+
       return _geometryFactory.createPolygon(convertedShell, holes);
     } else if (geometry is MultiPoint) {
       final points = <Point>[];
-      for (int i = 0; i < geometry.getNumGeometries(); i++) {
+      for (var i = 0; i < geometry.getNumGeometries(); i++) {
         final point = geometry.getGeometryN(i) as Point;
         final convertedPoint = _convertGeometryProjection(point, sourceProjectionKey, targetProjectionKey) as Point;
         points.add(convertedPoint);
@@ -820,7 +814,7 @@ class WktGenerator {
       return _geometryFactory.createMultiPoint(points);
     } else if (geometry is MultiLineString) {
       final lineStrings = <LineString>[];
-      for (int i = 0; i < geometry.getNumGeometries(); i++) {
+      for (var i = 0; i < geometry.getNumGeometries(); i++) {
         final lineString = geometry.getGeometryN(i) as LineString;
         final convertedLineString = _convertGeometryProjection(lineString, sourceProjectionKey, targetProjectionKey) as LineString;
         lineStrings.add(convertedLineString);
@@ -828,7 +822,7 @@ class WktGenerator {
       return _geometryFactory.createMultiLineString(lineStrings);
     } else if (geometry is MultiPolygon) {
       final polygons = <Polygon>[];
-      for (int i = 0; i < geometry.getNumGeometries(); i++) {
+      for (var i = 0; i < geometry.getNumGeometries(); i++) {
         final polygon = geometry.getGeometryN(i) as Polygon;
         final convertedPolygon = _convertGeometryProjection(polygon, sourceProjectionKey, targetProjectionKey) as Polygon;
         polygons.add(convertedPolygon);
@@ -836,7 +830,7 @@ class WktGenerator {
       return _geometryFactory.createMultiPolygon(polygons);
     } else if (geometry is GeometryCollection) {
       final geometries = <Geometry>[];
-      for (int i = 0; i < geometry.getNumGeometries(); i++) {
+      for (var i = 0; i < geometry.getNumGeometries(); i++) {
         final childGeometry = geometry.getGeometryN(i);
         final convertedChildGeometry = _convertGeometryProjection(childGeometry, sourceProjectionKey, targetProjectionKey);
         geometries.add(convertedChildGeometry);

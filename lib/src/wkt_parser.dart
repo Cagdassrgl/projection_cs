@@ -45,10 +45,10 @@ class WKTParser {
   /// Returns a list containing one or more [DTOPolygon] objects based on the parsed geometry.
   static List<DTOPolygon> parsePolygon({required String wkt, String? sourceProjectionKey, String? targetProjectionKey}) {
     final geometry = geocore.WKT().parserProjected().parse(wkt);
-    List<DTOPolygon> polygonList = [];
+    final polygonList = <DTOPolygon>[];
 
     if (geometry is geocore.MultiPolygon) {
-      for (var polygon in geometry.polygons) {
+      for (final polygon in geometry.polygons) {
         polygonList.add(_convertPolygon(polygon: polygon, sourceProjectionKey: sourceProjectionKey, targetProjectionKey: targetProjectionKey));
       }
     } else if (geometry is geocore.Polygon) {
