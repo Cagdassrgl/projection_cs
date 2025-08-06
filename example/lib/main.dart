@@ -14,7 +14,8 @@ class ProjectionTestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Projection CS Test UI',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: false),
       home: const ProjectionTestScreen(),
     );
   }
@@ -34,7 +35,7 @@ class _ProjectionTestScreenState extends State<ProjectionTestScreen> {
   final List<Polygon> _polygons = [];
   final List<CircleMarker> _circles = [];
 
-  String _resultText = 'Haritaya tıklayarak işlemleri test edin';
+  String _resultText = 'Haritaya tıklayarak nokta seçin, sonra geometri oluşturun';
   String _selectedOperation = 'Point';
   String _sourceProjection = 'EPSG:4326';
   String _targetProjection = 'EPSG:3857';
@@ -42,6 +43,7 @@ class _ProjectionTestScreenState extends State<ProjectionTestScreen> {
   final List<LatLng> _selectedPoints = [];
   String? _currentWktGeometry;
   String? _secondWktGeometry;
+  bool _geometryCreated = false;
 
   // Test için kullanılacak şehirler
   final List<LatLng> _turkishCities = [
@@ -116,16 +118,250 @@ class _ProjectionTestScreenState extends State<ProjectionTestScreen> {
           point: point,
           width: 40,
           height: 40,
-          child: const Icon(Icons.place, color: Colors.blue, size: 30),
+          child: const Icon(Icons.circle, color: Colors.blue, size: 25),
         ),
       );
-    });
 
-    _executeOperation();
+      _resultText =
+          'Seçilen nokta sayısı: ${_selectedPoints.length}\n'
+          'Son seçilen: ${point.latitude.toStringAsFixed(6)}, ${point.longitude.toStringAsFixed(6)}\n'
+          'Geometri oluşturmak için "Geometri Oluştur" butonuna basın';
+    });
   }
 
-  void _executeOperation() {
-    if (_selectedPoints.isEmpty) return;
+  void _createGeometry() {
+    if (_selectedPoints.isEmpty) {
+      setState(() {
+        _resultText = 'Geometri oluşturmak için önce haritadan nokta seçin';
+      });
+      return;
+    }
+
+    try {
+      switch (_selectedOperation) {
+        case 'Point':
+          _createPointGeometry();
+        case 'LineString':
+          _createLineStringGeometry();
+        case 'Polygon':
+          _createPolygonGeometry();
+        case 'MultiPoint':
+          _createMultiPointGeometry();
+        case 'MultiLineString':
+          _createMultiLineStringGeometry();
+        case 'MultiPolygon':
+          _createMultiPolygonGeometry();
+        case 'Geometry Collection':
+          _createGeometryCollectionGeometry();
+        default:
+          // Diğer operasyonlar için mevcut geometri gerekli
+          if (_currentWktGeometry == null) {
+            setState(() {
+              _resultText = 'Bu operasyon için önce bir geometri oluşturun (Point, LineString, Polygon, vb.)';
+            });
+            return;
+          }
+          setState(() {
+            _geometryCreated = true;
+            _resultText = 'Geometri hazır. "$_selectedOperation" testini başlatmak için "Test Başlat" butonuna basın.';
+          });
+      }
+    } catch (e) {
+      setState(() {
+        _resultText = 'Geometri oluşturma hatası: $e';
+      });
+    }
+  }
+
+  void _createPointGeometry() {
+    if (_selectedPoints.isNotEmpty) {
+      final wkt = WktGenerator.createPoint(coordinates: [_selectedPoints.last], sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
+
+      _currentWktGeometry = wkt;
+
+      setState(() {
+        _geometryCreated = true;
+        _resultText =
+            'Point geometrisi oluşturuldu!\n'
+            'Koordinat: ${_selectedPoints.last.latitude.toStringAsFixed(6)}, '
+            '${_selectedPoints.last.longitude.toStringAsFixed(6)}\n'
+            'Kaynak: $_sourceProjection -> Hedef: $_targetProjection\n\n'
+            'Test başlatmak için "Test Başlat" butonuna basın.';
+      });
+    }
+  }
+
+  void _createLineStringGeometry() {
+    if (_selectedPoints.length >= 2) {
+      final wkt = WktGenerator.createLineString(coordinates: _selectedPoints, sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
+
+      _currentWktGeometry = wkt;
+
+      // Add polyline to map
+      _polylines
+        ..clear()
+        ..add(Polyline(points: _selectedPoints, color: Colors.red, strokeWidth: 3));
+
+      setState(() {
+        _geometryCreated = true;
+        _resultText =
+            'LineString geometrisi oluşturuldu!\n'
+            'Nokta sayısı: ${_selectedPoints.length}\n'
+            'Kaynak: $_sourceProjection -> Hedef: $_targetProjection\n\n'
+            'Test başlatmak için "Test Başlat" butonuna basın.';
+      });
+    } else {
+      setState(() {
+        _resultText = 'LineString için en az 2 nokta seçin (Şu an: ${_selectedPoints.length})';
+      });
+    }
+  }
+
+  void _createPolygonGeometry() {
+    if (_selectedPoints.length >= 3) {
+      final wkt = WktGenerator.createPolygon(coordinates: _selectedPoints, sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
+
+      _currentWktGeometry = wkt;
+
+      // Add polygon to map
+      _polygons
+        ..clear()
+        ..add(Polygon(points: _selectedPoints, color: Colors.blue.withValues(alpha: 0.3), borderColor: Colors.blue, borderStrokeWidth: 2));
+
+      setState(() {
+        _geometryCreated = true;
+        _resultText =
+            'Polygon geometrisi oluşturuldu!\n'
+            'Nokta sayısı: ${_selectedPoints.length}\n'
+            'Kaynak: $_sourceProjection -> Hedef: $_targetProjection\n\n'
+            'Test başlatmak için "Test Başlat" butonuna basın.';
+      });
+    } else {
+      setState(() {
+        _resultText = 'Polygon için en az 3 nokta seçin (Şu an: ${_selectedPoints.length})';
+      });
+    }
+  }
+
+  void _createMultiPointGeometry() {
+    if (_selectedPoints.isNotEmpty) {
+      final wkt = WktGenerator.createMultiPoint(coordinates: _selectedPoints, sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
+
+      _currentWktGeometry = wkt;
+
+      setState(() {
+        _geometryCreated = true;
+        _resultText =
+            'MultiPoint geometrisi oluşturuldu!\n'
+            'Nokta sayısı: ${_selectedPoints.length}\n'
+            'Kaynak: $_sourceProjection -> Hedef: $_targetProjection\n\n'
+            'Test başlatmak için "Test Başlat" butonuna basın.';
+      });
+    }
+  }
+
+  void _createMultiLineStringGeometry() {
+    if (_selectedPoints.length >= 4) {
+      // İlk yarısı bir linestring, ikinci yarısı başka bir linestring
+      final mid = _selectedPoints.length ~/ 2;
+      final line1 = _selectedPoints.sublist(0, mid);
+      final line2 = _selectedPoints.sublist(mid);
+
+      final wkt = WktGenerator.createMultiLineString(coordinateLists: [line1, line2], sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
+
+      _currentWktGeometry = wkt;
+
+      // Add multiple polylines to map
+      _polylines
+        ..clear()
+        ..add(Polyline(points: line1, color: Colors.red, strokeWidth: 3))
+        ..add(Polyline(points: line2, color: Colors.green, strokeWidth: 3));
+
+      setState(() {
+        _geometryCreated = true;
+        _resultText =
+            'MultiLineString geometrisi oluşturuldu!\n'
+            'Line 1 nokta sayısı: ${line1.length}\n'
+            'Line 2 nokta sayısı: ${line2.length}\n'
+            'Kaynak: $_sourceProjection -> Hedef: $_targetProjection\n\n'
+            'Test başlatmak için "Test Başlat" butonuna basın.';
+      });
+    } else {
+      setState(() {
+        _resultText = 'MultiLineString için en az 4 nokta seçin (Şu an: ${_selectedPoints.length})';
+      });
+    }
+  }
+
+  void _createMultiPolygonGeometry() {
+    if (_selectedPoints.length >= 6) {
+      // İlk yarısı bir polygon, ikinci yarısı başka bir polygon
+      final mid = _selectedPoints.length ~/ 2;
+      final poly1 = _selectedPoints.sublist(0, mid);
+      final poly2 = _selectedPoints.sublist(mid);
+
+      final wkt = WktGenerator.createMultiPolygon(coordinateLists: [poly1, poly2], sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
+
+      _currentWktGeometry = wkt;
+
+      // Add multiple polygons to map
+      _polygons
+        ..clear()
+        ..add(Polygon(points: poly1, color: Colors.blue.withValues(alpha: 0.3), borderColor: Colors.blue, borderStrokeWidth: 2))
+        ..add(Polygon(points: poly2, color: Colors.red.withValues(alpha: 0.3), borderColor: Colors.red, borderStrokeWidth: 2));
+
+      setState(() {
+        _geometryCreated = true;
+        _resultText =
+            'MultiPolygon geometrisi oluşturuldu!\n'
+            'Polygon 1 nokta sayısı: ${poly1.length}\n'
+            'Polygon 2 nokta sayısı: ${poly2.length}\n'
+            'Kaynak: $_sourceProjection -> Hedef: $_targetProjection\n\n'
+            'Test başlatmak için "Test Başlat" butonuna basın.';
+      });
+    } else {
+      setState(() {
+        _resultText = 'MultiPolygon için en az 6 nokta seçin (Şu an: ${_selectedPoints.length})';
+      });
+    }
+  }
+
+  void _createGeometryCollectionGeometry() {
+    if (_selectedPoints.length >= 3) {
+      final pointWkt = WktGenerator.createPoint(coordinates: [_selectedPoints.first], sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
+
+      final lineWkt = WktGenerator.createLineString(coordinates: _selectedPoints.take(2).toList(), sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
+
+      final polygonWkt = WktGenerator.createPolygon(coordinates: _selectedPoints, sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
+
+      final collectionWkt = WktGenerator.createGeometryCollection(wktGeometries: [pointWkt, lineWkt, polygonWkt]);
+
+      _currentWktGeometry = collectionWkt;
+
+      setState(() {
+        _geometryCreated = true;
+        _resultText =
+            'Geometry Collection oluşturuldu!\n'
+            'Koleksiyon içeriği:\n'
+            '- 1 Point\n'
+            '- 1 LineString\n'
+            '- 1 Polygon\n\n'
+            'Test başlatmak için "Test Başlat" butonuna basın.';
+      });
+    } else {
+      setState(() {
+        _resultText = 'Geometry Collection için en az 3 nokta seçin';
+      });
+    }
+  }
+
+  void _executeTest() {
+    if (_currentWktGeometry == null && !['Point', 'LineString', 'Polygon', 'MultiPoint', 'MultiLineString', 'MultiPolygon', 'Geometry Collection'].contains(_selectedOperation)) {
+      setState(() {
+        _resultText = 'Test için önce bir geometri oluşturun!';
+      });
+      return;
+    }
 
     try {
       switch (_selectedOperation) {
@@ -172,156 +408,80 @@ class _ProjectionTestScreenState extends State<ProjectionTestScreen> {
       }
     } catch (e) {
       setState(() {
-        _resultText = 'Hata: $e';
+        _resultText = 'Test hatası: $e';
       });
     }
   }
 
   void _testPoint() {
-    if (_selectedPoints.isNotEmpty) {
-      final wkt = WktGenerator.createPoint(coordinates: [_selectedPoints.last], sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
-
-      _currentWktGeometry = wkt;
-
-      setState(() {
-        _resultText =
-            'Point WKT: $wkt\n\n'
-            'Koordinat: ${_selectedPoints.last.latitude.toStringAsFixed(6)}, '
-            '${_selectedPoints.last.longitude.toStringAsFixed(6)}\n'
-            'Kaynak: $_sourceProjection -> Hedef: $_targetProjection';
-      });
-    }
+    setState(() {
+      _resultText =
+          'Point WKT: $_currentWktGeometry\n\n'
+          'Koordinat: ${_selectedPoints.last.latitude.toStringAsFixed(6)}, '
+          '${_selectedPoints.last.longitude.toStringAsFixed(6)}\n'
+          'Kaynak: $_sourceProjection -> Hedef: $_targetProjection';
+    });
   }
 
   void _testLineString() {
-    if (_selectedPoints.length >= 2) {
-      final wkt = WktGenerator.createLineString(coordinates: _selectedPoints, sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
+    final length = WktGenerator.getLength(wktGeometry: _currentWktGeometry!);
 
-      _currentWktGeometry = wkt;
-
-      // Add polyline to map
-      _polylines
-        ..clear()
-        ..add(Polyline(points: _selectedPoints, color: Colors.red, strokeWidth: 3));
-
-      final length = WktGenerator.getLength(wktGeometry: wkt);
-
-      setState(() {
-        _resultText =
-            'LineString WKT: ${wkt.substring(0, 100)}...\n\n'
-            'Nokta sayısı: ${_selectedPoints.length}\n'
-            'Uzunluk: ${(length / 1000).toStringAsFixed(2)} km\n'
-            'Kaynak: $_sourceProjection -> Hedef: $_targetProjection';
-      });
-    } else {
-      setState(() {
-        _resultText = 'LineString için en az 2 nokta seçin (Şu an: ${_selectedPoints.length})';
-      });
-    }
+    setState(() {
+      _resultText =
+          'LineString WKT: ${_currentWktGeometry!.substring(0, 100)}...\n\n'
+          'Nokta sayısı: ${_selectedPoints.length}\n'
+          'Uzunluk: ${(length / 1000).toStringAsFixed(2)} km\n'
+          'Kaynak: $_sourceProjection -> Hedef: $_targetProjection';
+    });
   }
 
   void _testPolygon() {
-    if (_selectedPoints.length >= 3) {
-      final wkt = WktGenerator.createPolygon(coordinates: _selectedPoints, sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
+    final area = WktGenerator.getArea(wktGeometry: _currentWktGeometry!);
 
-      _currentWktGeometry = wkt;
-
-      // Add polygon to map
-      _polygons
-        ..clear()
-        ..add(Polygon(points: _selectedPoints, color: Colors.blue.withValues(alpha: 0.3), borderColor: Colors.blue, borderStrokeWidth: 2));
-
-      final area = WktGenerator.getArea(wktGeometry: wkt);
-
-      setState(() {
-        _resultText =
-            'Polygon WKT: ${wkt.substring(0, 100)}...\n\n'
-            'Nokta sayısı: ${_selectedPoints.length}\n'
-            'Alan: ${(area / 1000000).toStringAsFixed(2)} km²\n'
-            'Kaynak: $_sourceProjection -> Hedef: $_targetProjection';
-      });
-    } else {
-      setState(() {
-        _resultText = 'Polygon için en az 3 nokta seçin (Şu an: ${_selectedPoints.length})';
-      });
-    }
+    setState(() {
+      _resultText =
+          'Polygon WKT: ${_currentWktGeometry!.substring(0, 100)}...\n\n'
+          'Nokta sayısı: ${_selectedPoints.length}\n'
+          'Alan: ${(area / 1000000).toStringAsFixed(2)} km²\n'
+          'Kaynak: $_sourceProjection -> Hedef: $_targetProjection';
+    });
   }
 
   void _testMultiPoint() {
-    if (_selectedPoints.isNotEmpty) {
-      final wkt = WktGenerator.createMultiPoint(coordinates: _selectedPoints, sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
-
-      _currentWktGeometry = wkt;
-
-      setState(() {
-        _resultText =
-            'MultiPoint WKT: ${wkt.substring(0, 100)}...\n\n'
-            'Nokta sayısı: ${_selectedPoints.length}\n'
-            'Kaynak: $_sourceProjection -> Hedef: $_targetProjection';
-      });
-    }
+    setState(() {
+      _resultText =
+          'MultiPoint WKT: ${_currentWktGeometry!.substring(0, 100)}...\n\n'
+          'Nokta sayısı: ${_selectedPoints.length}\n'
+          'Kaynak: $_sourceProjection -> Hedef: $_targetProjection';
+    });
   }
 
   void _testMultiLineString() {
-    if (_selectedPoints.length >= 4) {
-      // İlk yarısı bir linestring, ikinci yarısı başka bir linestring
-      final mid = _selectedPoints.length ~/ 2;
-      final line1 = _selectedPoints.sublist(0, mid);
-      final line2 = _selectedPoints.sublist(mid);
+    final mid = _selectedPoints.length ~/ 2;
+    final line1 = _selectedPoints.sublist(0, mid);
+    final line2 = _selectedPoints.sublist(mid);
 
-      final wkt = WktGenerator.createMultiLineString(coordinateLists: [line1, line2], sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
-
-      _currentWktGeometry = wkt;
-
-      // Add multiple polylines to map
-      _polylines
-        ..clear()
-        ..add(Polyline(points: line1, color: Colors.red, strokeWidth: 3))
-        ..add(Polyline(points: line2, color: Colors.green, strokeWidth: 3));
-
-      setState(() {
-        _resultText =
-            'MultiLineString WKT: ${wkt.substring(0, 100)}...\n\n'
-            'Line 1 nokta sayısı: ${line1.length}\n'
-            'Line 2 nokta sayısı: ${line2.length}\n'
-            'Kaynak: $_sourceProjection -> Hedef: $_targetProjection';
-      });
-    } else {
-      setState(() {
-        _resultText = 'MultiLineString için en az 4 nokta seçin (Şu an: ${_selectedPoints.length})';
-      });
-    }
+    setState(() {
+      _resultText =
+          'MultiLineString WKT: ${_currentWktGeometry!.substring(0, 100)}...\n\n'
+          'Line 1 nokta sayısı: ${line1.length}\n'
+          'Line 2 nokta sayısı: ${line2.length}\n'
+          'Kaynak: $_sourceProjection -> Hedef: $_targetProjection';
+    });
   }
 
   void _testMultiPolygon() {
-    if (_selectedPoints.length >= 6) {
-      // İlk yarısı bir polygon, ikinci yarısı başka bir polygon
-      final mid = _selectedPoints.length ~/ 2;
-      final poly1 = _selectedPoints.sublist(0, mid);
-      final poly2 = _selectedPoints.sublist(mid);
+    final mid = _selectedPoints.length ~/ 2;
+    final poly1 = _selectedPoints.sublist(0, mid);
+    final poly2 = _selectedPoints.sublist(mid);
 
-      final wkt = WktGenerator.createMultiPolygon(coordinateLists: [poly1, poly2], sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
-
-      _currentWktGeometry = wkt;
-
-      // Add multiple polygons to map
-      _polygons
-        ..clear()
-        ..add(Polygon(points: poly1, color: Colors.blue.withValues(alpha: 0.3), borderColor: Colors.blue, borderStrokeWidth: 2))
-        ..add(Polygon(points: poly2, color: Colors.red.withValues(alpha: 0.3), borderColor: Colors.red, borderStrokeWidth: 2));
-
-      setState(() {
-        _resultText =
-            'MultiPolygon WKT: ${wkt.substring(0, 100)}...\n\n'
-            'Polygon 1 nokta sayısı: ${poly1.length}\n'
-            'Polygon 2 nokta sayısı: ${poly2.length}\n'
-            'Kaynak: $_sourceProjection -> Hedef: $_targetProjection';
-      });
-    } else {
-      setState(() {
-        _resultText = 'MultiPolygon için en az 6 nokta seçin (Şu an: ${_selectedPoints.length})';
-      });
-    }
+    setState(() {
+      _resultText =
+          'MultiPolygon WKT: ${_currentWktGeometry!.substring(0, 100)}...\n\n'
+          'Polygon 1 nokta sayısı: ${poly1.length}\n'
+          'Polygon 2 nokta sayısı: ${poly2.length}\n'
+          'Kaynak: $_sourceProjection -> Hedef: $_targetProjection';
+    });
   }
 
   void _testBuffer() {
@@ -560,29 +720,15 @@ class _ProjectionTestScreenState extends State<ProjectionTestScreen> {
   }
 
   void _testGeometryCollection() {
-    if (_selectedPoints.length >= 3) {
-      final pointWkt = WktGenerator.createPoint(coordinates: [_selectedPoints.first], sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
-
-      final lineWkt = WktGenerator.createLineString(coordinates: _selectedPoints.take(2).toList(), sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
-
-      final polygonWkt = WktGenerator.createPolygon(coordinates: _selectedPoints, sourceProjectionKey: _sourceProjection, targetProjectionKey: _targetProjection);
-
-      final collectionWkt = WktGenerator.createGeometryCollection(wktGeometries: [pointWkt, lineWkt, polygonWkt]);
-
-      setState(() {
-        _resultText =
-            'Geometry Collection WKT: ${collectionWkt.substring(0, 150)}...\n\n'
-            'Koleksiyon içeriği:\n'
-            '- 1 Point\n'
-            '- 1 LineString\n'
-            '- 1 Polygon\n\n'
-            'Toplam nokta sayısı: ${WktGenerator.getNumPoints(wktGeometry: collectionWkt)}';
-      });
-    } else {
-      setState(() {
-        _resultText = 'Geometry Collection için en az 3 nokta seçin';
-      });
-    }
+    setState(() {
+      _resultText =
+          'Geometry Collection WKT: ${_currentWktGeometry!.substring(0, 150)}...\n\n'
+          'Koleksiyon içeriği:\n'
+          '- 1 Point\n'
+          '- 1 LineString\n'
+          '- 1 Polygon\n\n'
+          'Toplam nokta sayısı: ${WktGenerator.getNumPoints(wktGeometry: _currentWktGeometry!)}';
+    });
   }
 
   void _createSecondGeometry() {
@@ -603,10 +749,23 @@ class _ProjectionTestScreenState extends State<ProjectionTestScreen> {
       // Add visual representation
       _polygons.add(Polygon(points: squarePoints, color: Colors.orange.withValues(alpha: 0.3), borderColor: Colors.orange, borderStrokeWidth: 2));
 
+      // Add markers for second geometry corners
+      for (var point in squarePoints) {
+        _markers.add(
+          Marker(
+            point: point,
+            width: 40,
+            height: 40,
+            child: const Icon(Icons.circle, color: Colors.orange, size: 25),
+          ),
+        );
+      }
+
       setState(() {
         _resultText =
             'İkinci geometri oluşturuldu (turuncu kare)\n\n'
             'Geometri türü: ${WktGenerator.getGeometryType(wktGeometry: _secondWktGeometry!)}\n'
+            'Turuncu circle markerlar ile işaretlendi\n'
             'Artık iki geometri işlemlerini (Union, Intersection, vb.) test edebilirsiniz';
       });
     } else {
@@ -625,7 +784,8 @@ class _ProjectionTestScreenState extends State<ProjectionTestScreen> {
       _selectedPoints.clear();
       _currentWktGeometry = null;
       _secondWktGeometry = null;
-      _resultText = 'Temizlendi. Haritaya tıklayarak yeni işlemler başlatın';
+      _geometryCreated = false;
+      _resultText = 'Temizlendi. Haritaya tıklayarak yeni nokta seçin';
     });
     _addTurkishCityMarkers();
   }
@@ -646,8 +806,7 @@ class _ProjectionTestScreenState extends State<ProjectionTestScreen> {
               'Lat: ${originalPoint.latitude.toStringAsFixed(8)}\n'
               'Lng: ${originalPoint.longitude.toStringAsFixed(8)}\n\n'
               'Dönüştürülmüş ($_targetProjection):\n'
-              'X: ${convertedPoint.longitude.toStringAsFixed(2)}\n'
-              'Y: ${convertedPoint.latitude.toStringAsFixed(2)}\n\n'
+              '${_sourceProjection == _targetProjection ? 'Lat: ${convertedPoint.latitude.toStringAsFixed(8)}\nLng: ${convertedPoint.longitude.toStringAsFixed(8)}' : 'X: ${convertedPoint.longitude.toStringAsFixed(2)}\nY: ${convertedPoint.latitude.toStringAsFixed(2)}'}\n\n'
               'Geri Dönüştürülmüş ($_sourceProjection):\n'
               'Lat: ${convertedBackPoint.latitude.toStringAsFixed(8)}\n'
               'Lng: ${convertedBackPoint.longitude.toStringAsFixed(8)}\n\n'
@@ -670,7 +829,7 @@ class _ProjectionTestScreenState extends State<ProjectionTestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Projection CS Test UI'), backgroundColor: Theme.of(context).colorScheme.inversePrimary),
+      appBar: AppBar(title: const Text('Projection CS Test UI')),
       body: Column(
         children: [
           // Controls Panel
@@ -744,6 +903,23 @@ class _ProjectionTestScreenState extends State<ProjectionTestScreen> {
                     const SizedBox(width: 4),
                     Expanded(
                       child: ElevatedButton(
+                        onPressed: _createGeometry,
+                        child: const Text('Geometri Oluştur', style: TextStyle(fontSize: 10)),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _geometryCreated ? _executeTest : null,
+                        child: const Text('Test Başlat', style: TextStyle(fontSize: 10)),
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
                         onPressed: _createSecondGeometry,
                         child: const Text('İkinci Geometri', style: TextStyle(fontSize: 10)),
                       ),
@@ -755,6 +931,8 @@ class _ProjectionTestScreenState extends State<ProjectionTestScreen> {
                         child: const Text('Projeksiyon Test', style: TextStyle(fontSize: 10)),
                       ),
                     ),
+                    const SizedBox(width: 4),
+                    const Expanded(child: SizedBox()), // Placeholder for symmetry
                   ],
                 ),
               ],
