@@ -47,6 +47,11 @@ class ProjectionConverter {
     required String targetProjectionKey,
   }) {
     try {
+      // If source and target projections are the same, return the original point
+      if (sourceProjectionKey == targetProjectionKey) {
+        return sourcePoint;
+      }
+
       // Check if both projections are supported
       if (!ProjectionDefinitions.isSupported(sourceProjectionKey)) {
         throw ProjectionException('Source projection "$sourceProjectionKey" is not supported');
@@ -278,6 +283,11 @@ class ProjectionConverter {
     required String sourceProjectionKey,
     required String targetProjectionKey,
   }) {
+    // If source and target projections are the same, return the original points
+    if (sourceProjectionKey == targetProjectionKey) {
+      return List<LatLng>.from(sourcePoints);
+    }
+
     return sourcePoints
         .map((point) => convert(
               sourcePoint: point,
