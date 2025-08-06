@@ -13,7 +13,8 @@ dependencies:
 
   flutter:
     sdk: flutter
-
+    
+  geocore: ^0.10.2
   latlong2: ^0.9.1
   proj4dart: ^2.1.0
 

@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:projection_cs/projection_cs.dart';
+import 'package:projection_cs/src/model/dto_polygon.dart';
+import 'package:projection_cs/src/wkt_parser.dart';
 
 void main() {
   group('ProjectionConverter Tests', () {
@@ -306,7 +308,7 @@ void main() {
       );
 
       expect(geometry.getGeometryType(), equals('Point'));
-      
+
       // Get the converted coordinates
       final coord = geometry.getCoordinate()!;
       // Should be close to Istanbul coordinates in WGS84 (28.9784, 41.0082)
@@ -324,11 +326,11 @@ void main() {
 
       expect(geometry.getGeometryType(), equals('LineString'));
       expect(geometry.getNumPoints(), equals(2));
-      
+
       // Verify coordinates are in reasonable WGS84 range
       final coords = geometry.getCoordinates();
       expect(coords[0].x, lessThan(180.0)); // longitude should be < 180
-      expect(coords[0].y, lessThan(90.0));  // latitude should be < 90
+      expect(coords[0].y, lessThan(90.0)); // latitude should be < 90
     });
 
     test('should convert Geometry object to WKT', () {
@@ -377,6 +379,43 @@ void main() {
         () => ProjectionDefinitions.get('INVALID:PROJECTION'),
         throwsA(isA<ProjectionException>()),
       );
+    });
+  });
+
+  group('WKTParser Tests', () {
+    test('4326 Wkt Parser', () {
+      final point = WKTParser.parsePoint(wkt: 'POINT(28.9784 41.0082)');
+      final line = WKTParser.parseLineString(wkt: 'LINESTRING(28.9784 41.0082, 28.9790 41.0090)');
+      final polygonWithHole = WKTParser.parsePolygon(
+          wkt:
+              'POLYGON ((28.9784 41.0082, 28.9790 41.0090, 28.9800 41.0080, 28.9784 41.0082), (28.9795 41.0085, 28.9798 41.0087, 28.9796 41.0090, 28.9795 41.0085))');
+      final multiPolyhonWithHole = WKTParser.parsePolygon(
+          wkt:
+              'MULTIPOLYGON ( ( (28.9784 41.0082, 28.9790 41.0090, 28.9800 41.0080, 28.9784 41.0082), (28.9786 41.0084, 28.9788 41.0086, 28.9790 41.0084, 28.9786 41.0084) ), ( (28.9795 41.0085, 28.9798 41.0087, 28.9796 41.0090, 28.9795 41.0085) ) )');
+
+      expect(point, isA<LatLng>());
+      expect(line, isA<List<LatLng>>());
+      expect(polygonWithHole, isA<List<DTOPolygon>>());
+      expect(multiPolyhonWithHole, isA<List<DTOPolygon>>());
+    });
+
+    test('3857 to 4326 Wkt Parser', () {
+      final point = WKTParser.parsePoint(wkt: 'POINT(3226883.8 5069429.0)', sourceProjectionKey: 'EPSG:3857');
+      final line = WKTParser.parseLineString(wkt: 'LINESTRING(3226883 5069429, 3227883 5070429)', sourceProjectionKey: 'EPSG:3857');
+      final polygonWithHole = WKTParser.parsePolygon(
+          wkt:
+              'POLYGON ((3226883.8 5069429.0, 3227883.8 5070429.0, 3228883.8 5069429.0, 3226883.8 5069429.0), (3227883.5 5069429.5, 3227883.8 5069430.0, 3227883.6 5069431.0, 3227883.5 5069429.5))',
+          sourceProjectionKey: 'EPSG:3857');
+      final multiPolyhonWithHole = WKTParser.parsePolygon(
+        wkt:
+            'MULTIPOLYGON ( ( (3226883.8 5069429.0, 3227883.8 5070429.0, 3228883.8 5069429.0, 3226883.8 5069429.0), (3226884.6 5069430.4, 3226884.8 5069431.6, 3226885.0 5069432.4, 3226884.6 5069430.4) ), ( (3227883.5 5069429.5, 3227883.8 5069430.0, 3227883.6 5069431.0, 3227883.5 5069429.5) ) )',
+        sourceProjectionKey: 'EPSG:3857',
+      );
+
+      expect(point, isA<LatLng>());
+      expect(line, isA<List<LatLng>>());
+      expect(polygonWithHole, isA<List<DTOPolygon>>());
+      expect(multiPolyhonWithHole, isA<List<DTOPolygon>>());
     });
   });
 }
