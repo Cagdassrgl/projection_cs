@@ -1,3 +1,5 @@
+// ignore_for_file: public_member_api_docs, document_ignores
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -750,7 +752,7 @@ class _ProjectionTestScreenState extends State<ProjectionTestScreen> {
       _polygons.add(Polygon(points: squarePoints, color: Colors.orange.withValues(alpha: 0.3), borderColor: Colors.orange, borderStrokeWidth: 2));
 
       // Add markers for second geometry corners
-      for (var point in squarePoints) {
+      for (final point in squarePoints) {
         _markers.add(
           Marker(
             point: point,
