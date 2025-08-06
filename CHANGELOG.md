@@ -1,3 +1,15 @@
+## 1.0.5
+
+- **OPTIMIZATION**: Improved performance for same-projection transformations
+  - Added early return optimization when source and target projections are identical
+  - Applied to both `convert()` and `convertBatch()` methods
+  - Eliminates unnecessary computation for same-projection scenarios
+- **FEATURE**: Added WKT projection conversion functionality
+  - Added `convertWkt()` method to transform WKT geometries between coordinate systems
+  - Supports all standard WKT geometry types (Point, LineString, Polygon, Multi-geometries, GeometryCollection)
+  - Comprehensive error handling and validation for WKT parsing and transformation
+  - Enhanced spatial workflow by enabling direct WKT coordinate system transformations
+
 ## 1.0.3
 
 - **ENHANCEMENT**: Enhanced WKT to Geometry conversion with projection support
