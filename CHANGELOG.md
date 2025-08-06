@@ -1,3 +1,22 @@
+## 1.0.3
+
+- **ENHANCEMENT**: Enhanced WKT to Geometry conversion with projection support
+  - Updated `wktToGeometry()` method to accept optional `sourceProjectionKey` parameter
+  - Added automatic coordinate conversion from source projection to EPSG:4326 (WGS84)
+  - Added comprehensive projection conversion support for all geometry types (Point, LineString, Polygon, Multi-geometries, GeometryCollection)
+  - Enhanced spatial analysis workflow by providing direct geometry objects in standardized WGS84 coordinates
+  - Improved documentation with detailed examples for projection conversion use cases
+  - Added extensive test coverage for projection conversion scenarios
+
+## 1.0.2
+
+- **FEATURE**: Added WKT to Geometry conversion methods
+  - Added `wktToGeometry()` method to convert WKT strings to dart_jts Geometry objects
+  - Added `geometryToWkt()` method to convert Geometry objects back to WKT strings
+  - Enhanced spatial analysis capabilities by providing direct access to Geometry objects
+  - Comprehensive error handling and documentation for new conversion methods
+  - Enables advanced spatial operations using dart_jts library directly
+
 ## 1.0.1
 
 - **BUGFIX**: Fixed coordinate order issue in EPSG:3857 to EPSG:4326 conversions

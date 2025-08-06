@@ -697,4 +697,180 @@ class WktGenerator {
       throw ProjectionException('Failed to create geometry collection: $e');
     }
   }
+
+  /// Converts a WKT string to a Geometry object with optional projection conversion.
+  ///
+  /// This method parses a Well-Known Text (WKT) string and returns the corresponding
+  /// dart_jts Geometry object. If a source projection is provided, it will convert
+  /// the coordinates from the source projection to EPSG:4326 (WGS84) before creating
+  /// the geometry object.
+  ///
+  /// Parameters:
+  /// - [wktGeometry]: Input geometry as WKT string
+  /// - [sourceProjectionKey]: Optional source projection identifier. If provided,
+  ///   coordinates will be converted from this projection to EPSG:4326
+  ///
+  /// Returns: Geometry object from dart_jts library in EPSG:4326 coordinate system.
+  ///
+  /// Throws: [ProjectionException] if the WKT string is invalid or parsing fails.
+  ///
+  /// Example:
+  /// ```dart
+  /// // Without projection conversion
+  /// final geometry = WktGenerator.wktToGeometry(wktGeometry: 'POINT (10.0 20.0)');
+  /// 
+  /// // With projection conversion from Web Mercator to WGS84
+  /// final geometry = WktGenerator.wktToGeometry(
+  ///   wktGeometry: 'POINT (3226883.8 5069429.0)',
+  ///   sourceProjectionKey: 'EPSG:3857'
+  /// );
+  /// ```
+  static Geometry wktToGeometry({
+    required String wktGeometry,
+    String? sourceProjectionKey,
+  }) {
+    try {
+      final geometry = _wktReader.read(wktGeometry);
+      if (geometry == null) {
+        throw ProjectionException('Failed to parse WKT: resulting geometry is null');
+      }
+
+      // If no source projection is provided, return geometry as-is
+      if (sourceProjectionKey == null) {
+        return geometry;
+      }
+
+      // Convert coordinates from source projection to EPSG:4326
+      return _convertGeometryProjection(geometry, sourceProjectionKey, 'EPSG:4326');
+    } catch (e) {
+      throw ProjectionException('WKT to Geometry conversion failed: $e');
+    }
+  }
+
+  /// Helper method to convert geometry coordinates between projections.
+  static Geometry _convertGeometryProjection(
+    Geometry geometry,
+    String sourceProjectionKey,
+    String targetProjectionKey,
+  ) {
+    if (geometry is Point) {
+      final coord = geometry.getCoordinate()!;
+      final latLng = LatLng(coord.y, coord.x);
+      final convertedLatLng = ProjectionConverter.convert(
+        sourcePoint: latLng,
+        sourceProjectionKey: sourceProjectionKey,
+        targetProjectionKey: targetProjectionKey,
+      );
+      return _geometryFactory.createPoint(
+        Coordinate(convertedLatLng.longitude, convertedLatLng.latitude),
+      );
+    } else if (geometry is LineString) {
+      final coords = geometry.getCoordinates();
+      final latLngs = coords.map((coord) => LatLng(coord.y, coord.x)).toList();
+      final convertedLatLngs = ProjectionConverter.convertBatch(
+        sourcePoints: latLngs,
+        sourceProjectionKey: sourceProjectionKey,
+        targetProjectionKey: targetProjectionKey,
+      );
+      final convertedCoords = convertedLatLngs
+          .map((latLng) => Coordinate(latLng.longitude, latLng.latitude))
+          .toList();
+      return _geometryFactory.createLineString(convertedCoords);
+    } else if (geometry is Polygon) {
+      final polygon = geometry;
+      final shell = polygon.getExteriorRing();
+      final shellCoords = shell.getCoordinates();
+      final shellLatLngs = shellCoords.map((coord) => LatLng(coord.y, coord.x)).toList();
+      final convertedShellLatLngs = ProjectionConverter.convertBatch(
+        sourcePoints: shellLatLngs,
+        sourceProjectionKey: sourceProjectionKey,
+        targetProjectionKey: targetProjectionKey,
+      );
+      final convertedShellCoords = convertedShellLatLngs
+          .map((latLng) => Coordinate(latLng.longitude, latLng.latitude))
+          .toList();
+      
+      final convertedShell = _geometryFactory.createLinearRing(convertedShellCoords);
+      
+      // Handle holes if present
+      final holes = <LinearRing>[];
+      for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
+        final hole = polygon.getInteriorRingN(i);
+        final holeCoords = hole.getCoordinates();
+        final holeLatLngs = holeCoords.map((coord) => LatLng(coord.y, coord.x)).toList();
+        final convertedHoleLatLngs = ProjectionConverter.convertBatch(
+          sourcePoints: holeLatLngs,
+          sourceProjectionKey: sourceProjectionKey,
+          targetProjectionKey: targetProjectionKey,
+        );
+        final convertedHoleCoords = convertedHoleLatLngs
+            .map((latLng) => Coordinate(latLng.longitude, latLng.latitude))
+            .toList();
+        holes.add(_geometryFactory.createLinearRing(convertedHoleCoords));
+      }
+      
+      return _geometryFactory.createPolygon(convertedShell, holes);
+    } else if (geometry is MultiPoint) {
+      final points = <Point>[];
+      for (int i = 0; i < geometry.getNumGeometries(); i++) {
+        final point = geometry.getGeometryN(i) as Point;
+        final convertedPoint = _convertGeometryProjection(point, sourceProjectionKey, targetProjectionKey) as Point;
+        points.add(convertedPoint);
+      }
+      return _geometryFactory.createMultiPoint(points);
+    } else if (geometry is MultiLineString) {
+      final lineStrings = <LineString>[];
+      for (int i = 0; i < geometry.getNumGeometries(); i++) {
+        final lineString = geometry.getGeometryN(i) as LineString;
+        final convertedLineString = _convertGeometryProjection(lineString, sourceProjectionKey, targetProjectionKey) as LineString;
+        lineStrings.add(convertedLineString);
+      }
+      return _geometryFactory.createMultiLineString(lineStrings);
+    } else if (geometry is MultiPolygon) {
+      final polygons = <Polygon>[];
+      for (int i = 0; i < geometry.getNumGeometries(); i++) {
+        final polygon = geometry.getGeometryN(i) as Polygon;
+        final convertedPolygon = _convertGeometryProjection(polygon, sourceProjectionKey, targetProjectionKey) as Polygon;
+        polygons.add(convertedPolygon);
+      }
+      return _geometryFactory.createMultiPolygon(polygons);
+    } else if (geometry is GeometryCollection) {
+      final geometries = <Geometry>[];
+      for (int i = 0; i < geometry.getNumGeometries(); i++) {
+        final childGeometry = geometry.getGeometryN(i);
+        final convertedChildGeometry = _convertGeometryProjection(childGeometry, sourceProjectionKey, targetProjectionKey);
+        geometries.add(convertedChildGeometry);
+      }
+      return _geometryFactory.createGeometryCollection(geometries);
+    } else {
+      // For unknown geometry types, return as-is
+      return geometry;
+    }
+  }
+
+  /// Converts a Geometry object to WKT string.
+  ///
+  /// This method takes a dart_jts Geometry object and converts it to its
+  /// Well-Known Text (WKT) representation. This is the inverse operation of wktToGeometry.
+  ///
+  /// Parameters:
+  /// - [geometry]: Input Geometry object from dart_jts library
+  ///
+  /// Returns: WKT string representation of the geometry.
+  ///
+  /// Throws: [ProjectionException] if the conversion fails.
+  ///
+  /// Example:
+  /// ```dart
+  /// final point = geometryFactory.createPoint(Coordinate(10.0, 20.0));
+  /// final wkt = WktGenerator.geometryToWkt(point);
+  /// print(wkt); // Output: POINT (10 20)
+  /// ```
+  static String geometryToWkt({required Geometry geometry}) {
+    try {
+      return _wktWriter.write(geometry);
+    } catch (e) {
+      throw ProjectionException('Geometry to WKT conversion failed: $e');
+    }
+  }
 }

@@ -288,6 +288,75 @@ void main() {
         throwsA(isA<ProjectionException>()),
       );
     });
+
+    test('should convert WKT to Geometry object', () {
+      const wktPoint = 'POINT(10 20)';
+      final geometry = WktGenerator.wktToGeometry(wktGeometry: wktPoint);
+
+      expect(geometry.getGeometryType(), equals('Point'));
+      expect(geometry.getNumPoints(), equals(1));
+    });
+
+    test('should convert WKT to Geometry object with projection conversion', () {
+      // Web Mercator coordinates for Istanbul (approximately)
+      const webMercatorWkt = 'POINT(3226883.8 5069429.0)';
+      final geometry = WktGenerator.wktToGeometry(
+        wktGeometry: webMercatorWkt,
+        sourceProjectionKey: 'EPSG:3857',
+      );
+
+      expect(geometry.getGeometryType(), equals('Point'));
+      
+      // Get the converted coordinates
+      final coord = geometry.getCoordinate()!;
+      // Should be close to Istanbul coordinates in WGS84 (28.9784, 41.0082)
+      expect(coord.x, closeTo(28.9, 1.0)); // longitude
+      expect(coord.y, closeTo(41.0, 1.0)); // latitude
+    });
+
+    test('should convert LineString WKT with projection conversion', () {
+      // Simple line in Web Mercator
+      const webMercatorLineWkt = 'LINESTRING(3226883 5069429, 3227883 5070429)';
+      final geometry = WktGenerator.wktToGeometry(
+        wktGeometry: webMercatorLineWkt,
+        sourceProjectionKey: 'EPSG:3857',
+      );
+
+      expect(geometry.getGeometryType(), equals('LineString'));
+      expect(geometry.getNumPoints(), equals(2));
+      
+      // Verify coordinates are in reasonable WGS84 range
+      final coords = geometry.getCoordinates();
+      expect(coords[0].x, lessThan(180.0)); // longitude should be < 180
+      expect(coords[0].y, lessThan(90.0));  // latitude should be < 90
+    });
+
+    test('should convert Geometry object to WKT', () {
+      const originalWkt = 'POINT(10 20)';
+      final geometry = WktGenerator.wktToGeometry(wktGeometry: originalWkt);
+      final convertedWkt = WktGenerator.geometryToWkt(geometry: geometry);
+
+      expect(convertedWkt, contains('POINT'));
+      expect(convertedWkt, contains('10'));
+      expect(convertedWkt, contains('20'));
+    });
+
+    test('should handle round-trip WKT to Geometry conversion', () {
+      const originalWkt = 'LINESTRING(0 0, 10 10, 20 0)';
+      final geometry = WktGenerator.wktToGeometry(wktGeometry: originalWkt);
+      final roundTripWkt = WktGenerator.geometryToWkt(geometry: geometry);
+
+      expect(geometry.getGeometryType(), equals('LineString'));
+      expect(geometry.getNumPoints(), equals(3));
+      expect(roundTripWkt, contains('LINESTRING'));
+    });
+
+    test('should throw ProjectionException for invalid WKT in wktToGeometry', () {
+      expect(
+        () => WktGenerator.wktToGeometry(wktGeometry: 'INVALID_WKT'),
+        throwsA(isA<ProjectionException>()),
+      );
+    });
   });
   group('ProjectionDefinitions Tests', () {
     test('should return available projections list', () {
