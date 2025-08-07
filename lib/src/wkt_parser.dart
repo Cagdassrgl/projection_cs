@@ -52,7 +52,7 @@ class WKTParser {
         polygonList.add(_convertPolygon(polygon: polygon, sourceProjectionKey: sourceProjectionKey, targetProjectionKey: targetProjectionKey));
       }
     } else if (geometry is geocore.Polygon) {
-      polygonList.add(_convertPolygon(polygon: geometry));
+      polygonList.add(_convertPolygon(polygon: geometry, sourceProjectionKey: sourceProjectionKey, targetProjectionKey: targetProjectionKey));
     }
 
     return polygonList;
