@@ -5,6 +5,18 @@
 
 A comprehensive Dart package for coordinate system transformations and advanced spatial analysis operations. Built with dart_jts integration for robust geometric computations and Well-Known Text (WKT) generation.
 
+## 🆕 What's New in v1.2.0
+
+**Code Reorganization & Improved Maintainability**
+
+- **🗂️ Better Project Structure**: Reorganized source code with cleaner separation of concerns
+- **📁 Specialized Folders**: 
+  - `projections/` - Coordinate system transformations (`ProjectionConverter`, `ProjectionDefinitions`)
+  - `generators/` - WKT geometry generation and spatial operations (`WktGenerator`)
+  - `parsers/` - WKT parsing functionality (`UniversalWKTParser`)
+- **🔧 Enhanced Developer Experience**: Improved code organization for better maintainability
+- **✅ Backward Compatible**: All existing APIs remain unchanged
+
 ## ⚠️ Important: EPSG:3857 Coordinate Input Format
 
 When working with **EPSG:3857 (Web Mercator)** coordinates, ensure proper coordinate order:
@@ -35,7 +47,7 @@ Add this to your package's `pubspec.yaml` file:
 
 ```yaml
 dependencies:
-  projection_cs: ^1.0.1
+  projection_cs: ^1.2.0
 ```
 
 Then run:
@@ -61,7 +73,7 @@ void main() {
   print('Point WKT: $point');
 
   // Convert coordinates between projections
-  final converted = ProjectionConverter.convertSingle(
+  final converted = ProjectionConverter.convert(
     sourcePoint: LatLng(41.0082, 28.9784),
     sourceProjectionKey: 'EPSG:4326',
     targetProjectionKey: 'EPSG:3857',
@@ -387,7 +399,7 @@ final collection = WktGenerator.createGeometryCollection(
 
 ```dart
 // Convert a single coordinate
-final converted = ProjectionConverter.convertSingle(
+final converted = ProjectionConverter.convert(
   sourcePoint: LatLng(41.0082, 28.9784),
   sourceProjectionKey: 'EPSG:4326',
   targetProjectionKey: 'EPSG:3857',
@@ -433,7 +445,7 @@ try {
 
 ```dart
 // Convert from geographic to projected coordinate system
-final utm = ProjectionConverter.convertSingle(
+final utm = ProjectionConverter.convert(
   sourcePoint: LatLng(52.5200, 13.4050), // Berlin
   sourceProjectionKey: 'EPSG:4326', // WGS84
   targetProjectionKey: 'EPSG:25832', // UTM Zone 32N
@@ -790,6 +802,43 @@ This package leverages the powerful [dart_jts](https://pub.dev/packages/dart_jts
 - **Industry Standard**: Based on the Java Topology Suite (JTS), widely used in GIS
 - **Comprehensive**: Full suite of 2D spatial operations and predicates
 - **Reliable**: Battle-tested algorithms for robust spatial analysis
+
+## 🏗️ Package Architecture (v1.2.0+)
+
+The package is organized with a clean, modular architecture for better maintainability:
+
+```
+lib/
+├── projection_cs.dart          # Main export file
+└── src/
+    ├── projections/            # 🌍 Coordinate system transformations
+    │   ├── projection_converter.dart      # Core transformation logic
+    │   └── projection_definitions.dart    # Projection definitions & configs
+    ├── generators/             # 🔧 WKT geometry generation & spatial ops
+    │   └── wkt_generator.dart             # Spatial analysis & WKT creation
+    ├── parsers/               # 📝 WKT parsing functionality
+    │   └── wkt_universal_parser.dart      # Universal WKT parsing
+    ├── model/                 # 📦 Data models & geometry objects
+    │   ├── base/              # Base classes (WKTGeometry, WKTResult)
+    │   └── object/            # Geometry implementations
+    └── utils/                 # 🛠️ Utilities & exceptions
+        ├── exceptions.dart    # Custom exception classes
+        └── equler_util.dart   # Mathematical utilities
+```
+
+### Key Components
+
+- **🌍 ProjectionConverter**: High-performance coordinate transformations between different CRS
+- **🔧 WktGenerator**: Comprehensive spatial operations and WKT geometry generation
+- **📝 UniversalWKTParser**: Intelligent WKT parsing with automatic geometry type detection
+- **📦 WKT Models**: Type-safe geometry objects with rich spatial functionality
+- **🛠️ Utilities**: Error handling, mathematical operations, and helper functions
+
+This modular design ensures:
+- **🔍 Easy Navigation**: Find functionality quickly with logical organization
+- **🧪 Better Testing**: Isolated components for comprehensive test coverage
+- **🔧 Enhanced Maintainability**: Clear separation of concerns
+- **📈 Scalable Development**: Add new features without breaking existing code
 
 ## Contributing
 

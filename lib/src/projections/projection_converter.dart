@@ -2,8 +2,8 @@ import 'dart:developer';
 
 import 'package:latlong2/latlong.dart';
 import 'package:proj4dart/proj4dart.dart' as proj4;
-import 'package:projection_cs/src/exceptions.dart';
-import 'package:projection_cs/src/projection_definitions.dart';
+import 'package:projection_cs/src/projections/projection_definitions.dart';
+import 'package:projection_cs/src/utils/exceptions.dart';
 
 /// A utility class for converting coordinates between different projection systems.
 ///
@@ -62,10 +62,12 @@ class ProjectionConverter {
       }
 
       // Get or create source projection
-      final sourceProj = proj4.Projection.get(sourceProjectionKey) ?? proj4.Projection.add(sourceProjectionKey, ProjectionDefinitions.get(sourceProjectionKey));
+      final sourceProj =
+          proj4.Projection.get(sourceProjectionKey) ?? proj4.Projection.add(sourceProjectionKey, ProjectionDefinitions.get(sourceProjectionKey));
 
       // Get or create target projection
-      final targetProj = proj4.Projection.get(targetProjectionKey) ?? proj4.Projection.add(targetProjectionKey, ProjectionDefinitions.get(targetProjectionKey));
+      final targetProj =
+          proj4.Projection.get(targetProjectionKey) ?? proj4.Projection.add(targetProjectionKey, ProjectionDefinitions.get(targetProjectionKey));
 
       // Create projection transformation tuple
       final transformationTuple = proj4.ProjectionTuple(fromProj: sourceProj, toProj: targetProj);

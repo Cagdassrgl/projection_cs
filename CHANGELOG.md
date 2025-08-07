@@ -1,3 +1,18 @@
+## 1.2.0
+
+- **CODE REORGANIZATION**: Improved project structure and maintainability
+  - Reorganized `lib/src/` directory with better separation of concerns
+  - Created specialized folders for different functionalities:
+    - `projections/` - Coordinate projection conversion logic (`ProjectionConverter`, `ProjectionDefinitions`)
+    - `generators/` - WKT geometry generation and spatial operations (`WktGenerator`)
+    - `parsers/` - WKT parsing functionality (`UniversalWKTParser`)
+    - `model/` - Data models and geometry objects (unchanged)
+    - `utils/` - Utility functions and exceptions (unchanged)
+  - Updated import paths throughout the codebase to reflect new structure
+  - All existing functionality remains unchanged - only internal organization improved
+  - Enhanced code maintainability and developer experience
+  - Verified all tests pass after reorganization
+
 ## 1.1.0
 
 - Added WKTParser

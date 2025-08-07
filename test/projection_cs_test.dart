@@ -1,8 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:projection_cs/projection_cs.dart';
-import 'package:projection_cs/src/model/dto_polygon.dart';
-import 'package:projection_cs/src/wkt_parser.dart';
 
 void main() {
   group('ProjectionConverter Tests', () {
@@ -381,41 +379,123 @@ void main() {
       );
     });
   });
+  const sourceProjection = 'EPSG:3857';
+  const targetProjection = 'EPSG:4326';
 
-  group('WKTParser Tests', () {
-    test('4326 Wkt Parser', () {
-      final point = WKTParser.parsePoint(wkt: 'POINT(28.9784 41.0082)');
-      final line = WKTParser.parseLineString(wkt: 'LINESTRING(28.9784 41.0082, 28.9790 41.0090)');
-      final polygonWithHole = WKTParser.parsePolygon(
-          wkt:
-              'POLYGON ((28.9784 41.0082, 28.9790 41.0090, 28.9800 41.0080, 28.9784 41.0082), (28.9795 41.0085, 28.9798 41.0087, 28.9796 41.0090, 28.9795 41.0085))');
-      final multiPolyhonWithHole = WKTParser.parsePolygon(
-          wkt:
-              'MULTIPOLYGON ( ( (28.9784 41.0082, 28.9790 41.0090, 28.9800 41.0080, 28.9784 41.0082), (28.9786 41.0084, 28.9788 41.0086, 28.9790 41.0084, 28.9786 41.0084) ), ( (28.9795 41.0085, 28.9798 41.0087, 28.9796 41.0090, 28.9795 41.0085) ) )');
-
-      expect(point, isA<LatLng>());
-      expect(line, isA<List<LatLng>>());
-      expect(polygonWithHole, isA<List<DTOPolygon>>());
-      expect(multiPolyhonWithHole, isA<List<DTOPolygon>>());
-    });
-
-    test('3857 to 4326 Wkt Parser', () {
-      final point = WKTParser.parsePoint(wkt: 'POINT(3226883.8 5069429.0)', sourceProjectionKey: 'EPSG:3857');
-      final line = WKTParser.parseLineString(wkt: 'LINESTRING(3226883 5069429, 3227883 5070429)', sourceProjectionKey: 'EPSG:3857');
-      final polygonWithHole = WKTParser.parsePolygon(
-          wkt:
-              'POLYGON ((3226883.8 5069429.0, 3227883.8 5070429.0, 3228883.8 5069429.0, 3226883.8 5069429.0), (3227883.5 5069429.5, 3227883.8 5069430.0, 3227883.6 5069431.0, 3227883.5 5069429.5))',
-          sourceProjectionKey: 'EPSG:3857');
-      final multiPolyhonWithHole = WKTParser.parsePolygon(
-        wkt:
-            'MULTIPOLYGON ( ( (3226883.8 5069429.0, 3227883.8 5070429.0, 3228883.8 5069429.0, 3226883.8 5069429.0), (3226884.6 5069430.4, 3226884.8 5069431.6, 3226885.0 5069432.4, 3226884.6 5069430.4) ), ( (3227883.5 5069429.5, 3227883.8 5069430.0, 3227883.6 5069431.0, 3227883.5 5069429.5) ) )',
-        sourceProjectionKey: 'EPSG:3857',
+  group('UniversalWKTParser Testleri - 3857 -> 4326', () {
+    test('MULTIPOINT parse ve dönüşüm testi', () {
+      const wkt = 'MULTIPOINT((1113194.91 4865942.28), (4452779.63 3503549.84))';
+      final result = UniversalWKTParser.parse(
+        wkt,
+        sourceProjectionKey: sourceProjection,
+        targetProjectionKey: targetProjection,
       );
 
-      expect(point, isA<LatLng>());
-      expect(line, isA<List<LatLng>>());
-      expect(polygonWithHole, isA<List<DTOPolygon>>());
-      expect(multiPolyhonWithHole, isA<List<DTOPolygon>>());
+      expect(result.isSuccess, true);
+      final geom = result.geometry;
+      expect(geom, isA<WKTMultiPoint>());
+    });
+
+    test('MULTILINESTRING parse ve dönüşüm testi', () {
+      const wkt = 'MULTILINESTRING((1113194.91 1118889.97, 2226389.82 2486256.86), (4452779.63 4865942.28, 3339584.72 3503549.84))';
+      final result = UniversalWKTParser.parse(
+        wkt,
+        sourceProjectionKey: sourceProjection,
+        targetProjectionKey: targetProjection,
+      );
+
+      expect(result.isSuccess, true);
+      expect(result.geometry, isA<WKTMultiLineString>());
+    });
+
+    test('MULTIPOLYGON parse ve dönüşüm testi', () {
+      const wkt = '''
+MULTIPOLYGON(((334111.47 2425281.77, 5009377.09 4865942.28, 1113194.91 4865942.28, 334111.47 2425281.77)),
+                                    ((16702.72 557305.26, 4452779.63 1118889.97, 1113194.91 2425281.77, 5565.52 1118889.97, 16702.72 557305.26)))''';
+      final result = UniversalWKTParser.parse(
+        wkt,
+        sourceProjectionKey: sourceProjection,
+        targetProjectionKey: targetProjection,
+      );
+
+      expect(result.isSuccess, true);
+      expect(result.geometry, isA<WKTPolygon>());
+    });
+
+    test('GEOMETRYCOLLECTION parse testi', () {
+      const wkt = '''
+GEOMETRYCOLLECTION(
+        POINT(4452779.63 1118889.97),
+        LINESTRING(1113194.91 1118889.97, 2226389.82 2486256.86),
+        POLYGON((4452779.63 4865942.28, 2226389.82 5621521.49, 5009377.09 3503549.84, 4452779.63 4865942.28)),
+        MULTIPOINT((1113194.91 4865942.28), (4452779.63 3503549.84))
+      )''';
+
+      final result = UniversalWKTParser.parse(
+        wkt,
+        sourceProjectionKey: sourceProjection,
+        targetProjectionKey: targetProjection,
+      );
+
+      expect(result.isSuccess, true);
+      expect(result.geometry, isA<WKTGeometryCollection>());
+    });
+
+    test('Projected MULTIPOINT dönüşüm testi', () {
+      const wkt = 'MULTIPOINT((5565974.54 4649776.22), (6679163.76 4750000.00))';
+      final result = UniversalWKTParser.parse(
+        wkt,
+        sourceProjectionKey: sourceProjection,
+        targetProjectionKey: targetProjection,
+      );
+
+      expect(result.isSuccess, true);
+      final geom = result.geometry! as WKTMultiPoint;
+      expect(geom.pointCount, 2);
+    });
+
+    test('Geçersiz WKT yakalanmalı', () {
+      const wkt = 'MULTIPOINT((INVALID))';
+      final result = UniversalWKTParser.parse(
+        wkt,
+        sourceProjectionKey: sourceProjection,
+        targetProjectionKey: targetProjection,
+      );
+
+      expect(result.isFailure, true);
+    });
+
+    test('Type-safe parsing başarısızlığı', () {
+      const wkt = 'MULTIPOINT((1113194.91 1118889.97), (2226389.82 2486256.86))';
+      final result = UniversalWKTParser.parseAsPoint(
+        wkt,
+        sourceProjectionKey: sourceProjection,
+        targetProjectionKey: targetProjection,
+      );
+
+      expect(result.isFailure, true);
+    });
+
+    test('Nested GEOMETRYCOLLECTION testi', () {
+      const wkt = '''
+GEOMETRYCOLLECTION(
+        GEOMETRYCOLLECTION(
+          POINT(1113194.91 1118889.97),
+          LINESTRING(2226389.82 2486256.86, 3339584.72 3503549.84)
+        ),
+        MULTIPOLYGON(((0 0, 1113194.91 0, 1113194.91 1118889.97, 0 1118889.97, 0 0)))
+      )''';
+
+      final result = UniversalWKTParser.parse(
+        wkt,
+        sourceProjectionKey: sourceProjection,
+        targetProjectionKey: targetProjection,
+      );
+
+      expect(result.isSuccess, true);
+      final nested = result.geometry! as WKTGeometryCollection;
+      expect(nested.geometryCount, greaterThan(0));
+      expect(nested.geometries.first, isA<WKTGeometryCollection>());
     });
   });
 }
