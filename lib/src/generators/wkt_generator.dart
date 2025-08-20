@@ -11,8 +11,17 @@ import 'package:projection_cs/projection_cs.dart';
 /// It integrates with projection transformations to provide complete GIS functionality.
 class WktGenerator {
   static final GeometryFactory _geometryFactory = GeometryFactory.defaultPrecision();
-  static final WKTWriter _wktWriter = WKTWriter();
+  static final WKTWriter _wktWriter = _createLocaleIndependentWriter();
   static final WKTReader _wktReader = WKTReader();
+
+  /// Creates a WKTWriter with locale-independent settings to ensure consistent
+  /// output format regardless of system locale settings.
+  static WKTWriter _createLocaleIndependentWriter() {
+    final writer = WKTWriter()
+      ..setFormatted(false) // Disable formatting to avoid locale-specific number formatting
+      ..setMaxCoordinatesPerLine(2); // Ensure consistent coordinate formatting
+    return writer;
+  }
 
   // MARK: - Geometry Creation Methods
 
@@ -43,7 +52,9 @@ class WktGenerator {
       Coordinate(transformedCoords.first.longitude, transformedCoords.first.latitude),
     );
 
-    return _wktWriter.write(point);
+    final wkt = _wktWriter.write(point);
+
+    return wkt;
   }
 
   /// Creates a LINESTRING geometry from coordinates.

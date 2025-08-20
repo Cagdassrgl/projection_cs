@@ -1,3 +1,12 @@
+## 1.2.1
+
+- **LOCALE INDEPENDENCE**: Enhanced WKT generation with locale-independent formatting
+  - Modified `WktGenerator` to use locale-independent `WKTWriter` configuration
+  - Disabled formatting and tab settings to ensure consistent output regardless of system locale
+  - Prevents decimal separator and number formatting issues across different regional settings
+  - Ensures reliable WKT output format in international environments
+  - Added `_createLocaleIndependentWriter()` method for proper WKT writer initialization
+
 ## 1.2.0
 
 - **CODE REORGANIZATION**: Improved project structure and maintainability
