@@ -11,16 +11,24 @@ import 'package:projection_cs/projection_cs.dart';
 /// It integrates with projection transformations to provide complete GIS functionality.
 class WktGenerator {
   static final GeometryFactory _geometryFactory = GeometryFactory.defaultPrecision();
-  static final WKTWriter _wktWriter = _createLocaleIndependentWriter();
+  static final WKTWriter _wktWriter = _createWKTWriter();
   static final WKTReader _wktReader = WKTReader();
 
-  /// Creates a WKTWriter with locale-independent settings to ensure consistent
-  /// output format regardless of system locale settings.
-  static WKTWriter _createLocaleIndependentWriter() {
-    final writer = WKTWriter()
-      ..setFormatted(false) // Disable formatting to avoid locale-specific number formatting
-      ..setMaxCoordinatesPerLine(2); // Ensure consistent coordinate formatting
+  /// Creates a WKTWriter with proper formatting settings
+  static WKTWriter _createWKTWriter() {
+    final writer = WKTWriter();
+    writer.setFormatted(false);
     return writer;
+  }
+
+  /// Fixes decimal separators in WKT strings by replacing commas with dots
+  static String _fixDecimalSeparators(String wkt) {
+    // Bu regex ondalık sayılardaki virgülleri nokta ile değiştirir
+    // Koordinatları ayıran virgülleri etkilemez
+    return wkt.replaceAllMapped(
+      RegExp(r'(\d),(\d)'), // Sadece rakam,rakam formatındaki virgülleri yakalar
+      (match) => '${match.group(1)}.${match.group(2)}',
+    );
   }
 
   // MARK: - Geometry Creation Methods
@@ -52,7 +60,8 @@ class WktGenerator {
       Coordinate(transformedCoords.first.longitude, transformedCoords.first.latitude),
     );
 
-    final wkt = _wktWriter.write(point);
+    String wkt = _wktWriter.write(point);
+    wkt = _fixDecimalSeparators(wkt);
 
     return wkt;
   }
@@ -83,7 +92,10 @@ class WktGenerator {
     final coords = transformedCoords.map((coord) => Coordinate(coord.longitude, coord.latitude)).toList();
 
     final lineString = _geometryFactory.createLineString(coords);
-    return _wktWriter.write(lineString);
+    String wkt = _wktWriter.write(lineString);
+    wkt = _fixDecimalSeparators(wkt);
+
+    return wkt;
   }
 
   /// Creates a POLYGON geometry from coordinates.
@@ -141,7 +153,10 @@ class WktGenerator {
     }
 
     final polygon = _geometryFactory.createPolygon(shell, holeRings);
-    return _wktWriter.write(polygon);
+    String wkt = _wktWriter.write(polygon);
+    wkt = _fixDecimalSeparators(wkt);
+
+    return wkt;
   }
 
   /// Creates a MULTIPOINT geometry from coordinates.
