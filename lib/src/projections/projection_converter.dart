@@ -62,12 +62,12 @@ class ProjectionConverter {
       }
 
       // Get or create source projection
-      final sourceProj =
-          proj4.Projection.get(sourceProjectionKey) ?? proj4.Projection.add(sourceProjectionKey, ProjectionDefinitions.get(sourceProjectionKey));
+      final sourceProj = proj4.Projection.get(sourceProjectionKey) ??
+          proj4.Projection.add(sourceProjectionKey, ProjectionDefinitions.get(sourceProjectionKey));
 
       // Get or create target projection
-      final targetProj =
-          proj4.Projection.get(targetProjectionKey) ?? proj4.Projection.add(targetProjectionKey, ProjectionDefinitions.get(targetProjectionKey));
+      final targetProj = proj4.Projection.get(targetProjectionKey) ??
+          proj4.Projection.add(targetProjectionKey, ProjectionDefinitions.get(targetProjectionKey));
 
       // Create projection transformation tuple
       final transformationTuple = proj4.ProjectionTuple(fromProj: sourceProj, toProj: targetProj);
@@ -158,6 +158,24 @@ class ProjectionConverter {
       case 'SR-ORG:7935':
       case 'SR-ORG:7936':
       case 'SR-ORG:7937':
+      case 'SR-ORG:7869':
+      case 'SR-ORG:7870':
+      case 'SR-ORG:7871':
+      case 'SR-ORG:7872':
+        return proj4.Point(x: sourcePoint.longitude, y: sourcePoint.latitude);
+
+      // Turkish ED50 EPSG systems - Projected systems
+      case 'EPSG:2302':
+      case 'EPSG:2319':
+      case 'EPSG:2321':
+      case 'EPSG:2322':
+      case 'EPSG:2323':
+      case 'EPSG:2324':
+      case 'EPSG:2325':
+      case 'EPSG:32635':
+      case 'EPSG:32636':
+      case 'EPSG:32637':
+      case 'EPSG:32638':
         return proj4.Point(x: sourcePoint.longitude, y: sourcePoint.latitude);
 
       // Default case for unknown projections
@@ -239,6 +257,24 @@ class ProjectionConverter {
       case 'SR-ORG:7935':
       case 'SR-ORG:7936':
       case 'SR-ORG:7937':
+      case 'SR-ORG:7869':
+      case 'SR-ORG:7870':
+      case 'SR-ORG:7871':
+      case 'SR-ORG:7872':
+        return LatLng(transformedCoordinate.y, transformedCoordinate.x);
+
+      // Turkish ED50 EPSG systems - Projected systems
+      case 'EPSG:2302':
+      case 'EPSG:2319':
+      case 'EPSG:2321':
+      case 'EPSG:2322':
+      case 'EPSG:2323':
+      case 'EPSG:2324':
+      case 'EPSG:2325':
+      case 'EPSG:32635':
+      case 'EPSG:32636':
+      case 'EPSG:32637':
+      case 'EPSG:32638':
         return LatLng(transformedCoordinate.y, transformedCoordinate.x);
 
       // Default case for unknown projections - assume projected coordinate system

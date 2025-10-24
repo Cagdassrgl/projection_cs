@@ -19,13 +19,20 @@ class ProjectionDefinitions {
   static const Map<String, String> _projectionCodes = {
     // MARK: - Turkish National Coordinate Systems (ITRF96)
     // Turkish National Coordinate Systems - ITRF96 based (3-degree zones)
-    'ITRF96_3DEG_TM30': '+proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-    'ITRF96_3DEG_TM27': '+proj=tmerc +lat_0=0 +lon_0=27 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-    'ITRF96_3DEG_TM33': '+proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-    'ITRF96_3DEG_TM36': '+proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-    'ITRF96_3DEG_TM39': '+proj=tmerc +lat_0=0 +lon_0=39 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-    'ITRF96_3DEG_TM42': '+proj=tmerc +lat_0=0 +lon_0=42 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-    'ITRF96_3DEG_TM45': '+proj=tmerc +lat_0=0 +lon_0=45 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'ITRF96_3DEG_TM30':
+        '+proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'ITRF96_3DEG_TM27':
+        '+proj=tmerc +lat_0=0 +lon_0=27 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'ITRF96_3DEG_TM33':
+        '+proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'ITRF96_3DEG_TM36':
+        '+proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'ITRF96_3DEG_TM39':
+        '+proj=tmerc +lat_0=0 +lon_0=39 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'ITRF96_3DEG_TM42':
+        '+proj=tmerc +lat_0=0 +lon_0=42 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'ITRF96_3DEG_TM45':
+        '+proj=tmerc +lat_0=0 +lon_0=45 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
 
     // MARK: - European Datum 1950 (ED50) - 3-degree Systems
     // European Datum 1950 - 3-degree Transverse Mercator zones
@@ -52,20 +59,63 @@ class ProjectionDefinitions {
 
     // MARK: - Spatial Reference Organization (SR-ORG) Definitions
     // Spatial Reference Organization definitions (alternative ITRF96 definitions)
-    'SR-ORG:7931': '+proj=tmerc +lat_0=0 +lon_0=27 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-    'SR-ORG:7932': '+proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-    'SR-ORG:7933': '+proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-    'SR-ORG:7934': '+proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-    'SR-ORG:7935': '+proj=tmerc +lat_0=0 +lon_0=39 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-    'SR-ORG:7936': '+proj=tmerc +lat_0=0 +lon_0=42 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
-    'SR-ORG:7937': '+proj=tmerc +lat_0=0 +lon_0=45 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'SR-ORG:7931':
+        '+proj=tmerc +lat_0=0 +lon_0=27 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'SR-ORG:7932':
+        '+proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'SR-ORG:7933':
+        '+proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'SR-ORG:7934':
+        '+proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'SR-ORG:7935':
+        '+proj=tmerc +lat_0=0 +lon_0=39 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'SR-ORG:7936':
+        '+proj=tmerc +lat_0=0 +lon_0=42 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
+    'SR-ORG:7937':
+        '+proj=tmerc +lat_0=0 +lon_0=45 +k=1 +x_0=500000 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs',
 
     // MARK: - Global Coordinate Systems (EPSG)
     // Global coordinate systems
-    'EPSG3857': '+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs +type=crs', // Web Mercator (legacy)
-    'EPSG:3857': '+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs +type=crs', // Web Mercator
+    'EPSG3857':
+        '+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs +type=crs', // Web Mercator (legacy)
+    'EPSG:3857':
+        '+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs +type=crs', // Web Mercator
     'EPSG4326': '+proj=longlat +datum=WGS84 +no_defs +type=crs', // WGS84 Geographic (legacy)
     'EPSG:4326': '+proj=longlat +datum=WGS84 +no_defs +type=crs', // WGS84 Geographic
+
+    // MARK: - Turkish ED50 Systems (EPSG)
+    // Turkish ED50 - 3-degree Transverse Mercator zones
+    'EPSG:2302':
+        '+proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +ellps=intl +towgs84=-84.1,-101.8,-129.7,0,0,0.468,1.05 +units=m +no_defs', // 3Der ED50 DOM30
+    'EPSG:2319':
+        '+proj=tmerc +lat_0=0 +lon_0=27 +k=1 +x_0=500000 +y_0=0 +ellps=intl +towgs84=-84.1,-101.8,-129.7,0,0,0.468,1.05 +units=m +no_defs', // 3Der ED50 DOM27
+    'EPSG:2321':
+        '+proj=tmerc +lat_0=0 +lon_0=33 +k=1 +x_0=500000 +y_0=0 +ellps=intl +towgs84=-84.1,-101.8,-129.7,0,0,0.468,1.05 +units=m +no_defs', // 3Der ED50 DOM33
+    'EPSG:2322':
+        '+proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +ellps=intl +towgs84=-84.1,-101.8,-129.7,0,0,0.468,1.05 +units=m +no_defs', // 3Der ED50 DOM36
+    'EPSG:2323':
+        '+proj=tmerc +lat_0=0 +lon_0=39 +k=1 +x_0=500000 +y_0=0 +ellps=intl +towgs84=-84.1,-101.8,-129.7,0,0,0.468,1.05 +units=m +no_defs', // 3Der ED50 DOM39
+    'EPSG:2324':
+        '+proj=tmerc +lat_0=0 +lon_0=42 +k=1 +x_0=500000 +y_0=0 +ellps=intl +towgs84=-84.1,-101.8,-129.7,0,0,0.468,1.05 +units=m +no_defs', // 3Der ED50 DOM42
+    'EPSG:2325':
+        '+proj=tmerc +lat_0=0 +lon_0=45 +k=1 +x_0=500000 +y_0=0 +ellps=intl +towgs84=-84.1,-101.8,-129.7,0,0,0.468,1.05 +units=m +no_defs', // 3Der ED50 DOM45
+
+    // Turkish ED50 - UTM 6-degree zones
+    'EPSG:32635':
+        '+proj=utm +zone=35 +ellps=intl +towgs84=-84.1,-101.8,-129.7,0,0,0.468,1.05 +units=m +no_defs', // 6Der ED50 DOM27
+    'EPSG:32636':
+        '+proj=utm +zone=36 +ellps=intl +towgs84=-84.1,-101.8,-129.7,0,0,0.468,1.05 +units=m +no_defs', // 6Der ED50 DOM33
+    'EPSG:32637':
+        '+proj=utm +zone=37 +ellps=intl +towgs84=-84.1,-101.8,-129.7,0,0,0.468,1.05 +units=m +no_defs', // 6Der ED50 DOM39
+    'EPSG:32638':
+        '+proj=utm +zone=38 +ellps=intl +towgs84=-84.1,-101.8,-129.7,0,0,0.468,1.05 +units=m +no_defs', // 6Der ED50 DOM45
+
+    // MARK: - Additional SR-ORG Definitions
+    // Turkish ITRF96 - 6-degree UTM zones
+    'SR-ORG:7869': '+proj=utm +zone=35 +ellps=GRS80 +units=m +no_defs', // 6Der ITRF DOM27
+    'SR-ORG:7870': '+proj=utm +zone=36 +ellps=GRS80 +units=m +no_defs', // 6Der ITRF DOM33
+    'SR-ORG:7871': '+proj=utm +zone=37 +ellps=GRS80 +units=m +no_defs', // 6Der ITRF DOM39
+    'SR-ORG:7872': '+proj=utm +zone=38 +ellps=GRS80 +units=m +no_defs', // 6Der ITRF DOM45
   };
 
   // MARK: - Projection Retrieval Methods

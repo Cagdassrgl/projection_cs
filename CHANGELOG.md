@@ -1,3 +1,28 @@
+## 1.3.0
+
+- **EXPANDED PROJECTION SUPPORT**: Added comprehensive Turkish coordinate system support
+  - Added EPSG projection codes for Turkish ED50 coordinate systems:
+    - `EPSG:2302` - 3Der ED50 DOM30 (3-degree Transverse Mercator zone)
+    - `EPSG:2319` - 3Der ED50 DOM27 (3-degree Transverse Mercator zone)
+    - `EPSG:2321` - 3Der ED50 DOM33 (3-degree Transverse Mercator zone)
+    - `EPSG:2322` - 3Der ED50 DOM36 (3-degree Transverse Mercator zone)
+    - `EPSG:2323` - 3Der ED50 DOM39 (3-degree Transverse Mercator zone)
+    - `EPSG:2324` - 3Der ED50 DOM42 (3-degree Transverse Mercator zone)
+    - `EPSG:2325` - 3Der ED50 DOM45 (3-degree Transverse Mercator zone)
+  - Added EPSG UTM projection codes for Turkish ED50 systems:
+    - `EPSG:32635` - 6Der ED50 DOM27 (UTM Zone 35)
+    - `EPSG:32636` - 6Der ED50 DOM33 (UTM Zone 36)
+    - `EPSG:32637` - 6Der ED50 DOM39 (UTM Zone 37)
+    - `EPSG:32638` - 6Der ED50 DOM45 (UTM Zone 38)
+  - Added additional SR-ORG projection codes for Turkish ITRF96 UTM systems:
+    - `SR-ORG:7869` - 6Der ITRF DOM27 (UTM Zone 35)
+    - `SR-ORG:7870` - 6Der ITRF DOM33 (UTM Zone 36)
+    - `SR-ORG:7871` - 6Der ITRF DOM39 (UTM Zone 37)
+    - `SR-ORG:7872` - 6Der ITRF DOM45 (UTM Zone 38)
+  - Updated `ProjectionConverter` to handle all new projection codes with proper coordinate order
+  - Enhanced Turkish geodetic infrastructure support with accurate datum transformation parameters
+  - All new projections fully integrated into conversion methods and coordinate handling logic
+
 ## 1.2.1
 
 - **LOCALE INDEPENDENCE**: Enhanced WKT generation with locale-independent formatting
